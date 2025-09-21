@@ -52,9 +52,9 @@ class ExtendedMaturityRating(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    level: str
-    rating: str
-    system: str
+    level: str | None = None
+    rating: str | None = None
+    system: str | None = None
 
 
 class Award(BaseModel):

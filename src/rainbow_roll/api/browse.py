@@ -2,11 +2,12 @@
 # https://www.crunchyroll.com/content/v2/discover/browse?n=36&sort_by=newly_added&ratings=true&preferred_audio_language=ja-JP&locale=en-US
 # The app uses https://www.crunchyroll.com/content/v2/discover/browse?n=36&sort_by=newly_added&ratings=true&locale=en-US
 import logging
+from datetime import datetime
 from typing import Any, Literal, overload
 
 from rainbow_roll.api.rainbow_roll_protocol import RainbowRollProtocol
 from rainbow_roll.models.response.browse import ModelItem as BaseModelItem
-from rainbow_roll.models.response.browse_episodes import ModelItem as EpisodeModelItem
+from rainbow_roll.models.response.browse_episode import ModelItem as EpisodeModelItem
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ class Browse(RainbowRollProtocol):
         if type is None:
             return self.parse_response(BaseModelItem, data, "browse")
         if type == "episode":
-            return self.parse_response(EpisodeModelItem, data, "browse_episodes")
+            return self.parse_response(EpisodeModelItem, data, "browse_episode")
 
         msg = f"Unsupported type for browse: {type}"
         raise ValueError(msg)
@@ -127,6 +128,7 @@ class Browse(RainbowRollProtocol):
         start: int | None = None,
         sort_by: str = "newly_added",
         ratings: Literal[True] | None = True,
+        end_date: datetime | None = None,
     ) -> BaseModelItem:
         """Browse with parameters that match the internal parameters for new videos.
 
@@ -134,6 +136,12 @@ class Browse(RainbowRollProtocol):
         https://www.crunchyroll.com/content/v2/discover/browse?n=36&sort_by=newly_added&ratings=true&preferred_audio_language=ja-JP&locale=en-US
         this will exactly match that URL structure.
         """
+        # For simplicity if no end_date is given set it to the current date so only 1
+        # page will be downloaded.
+        if end_date is None:
+            end_date = datetime.now().astimezone()
+
+        # Download current page
         data = self.download_browse(
             n=n,
             sort_by=sort_by,
@@ -142,8 +150,24 @@ class Browse(RainbowRollProtocol):
             start=start,
             ratings=ratings,
         )
+        result = self.parse_browse(data)
 
-        return self.parse_browse(data)
+        # Recursively download pages until the last item is older than end_date or no
+        # more items are available.
+        if result.data and result.data[-1].last_public > end_date:
+            next_pages = self.get_browse_videos_new(
+                n=n,
+                preferred_audio_language=preferred_audio_language,
+                locale=locale,
+                start=(start or 0) + n,
+                sort_by=sort_by,
+                ratings=ratings,
+                end_date=end_date,
+            )
+
+            result.data.extend(next_pages.data)
+
+        return result
 
     def get_browse_discover(
         self,
