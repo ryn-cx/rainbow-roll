@@ -1,8 +1,6 @@
 from pydantic import BaseModel
 
-EXTRA_IMPORTS = """from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from datetime import datetime"""
+EXTRA_IMPORTS = """from datetime import datetime # noqa: TC003"""
 
 
 class Override(BaseModel):
@@ -27,7 +25,7 @@ def override(endpoint: str, model: str, field_name: str, new_type: str) -> None:
 
 
 override("browse", "Datum", "last_public", "datetime")
-override("browse_episodes", "EpisodeMetadata", "episode_air_date", "datetime")
-override("browse_episodes", "EpisodeMetadata", "premium_available_date", "datetime")
-override("browse_episodes", "EpisodeMetadata", "upload_date", "datetime")
-override("browse_episodes", "Datum", "last_public", "datetime")
+override("browse_episode", "EpisodeMetadata", "episode_air_date", "datetime")
+override("browse_episode", "EpisodeMetadata", "premium_available_date", "datetime")
+override("browse_episode", "EpisodeMetadata", "upload_date", "datetime")
+override("browse_episode", "Datum", "last_public", "datetime")
