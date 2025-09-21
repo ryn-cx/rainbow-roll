@@ -26,17 +26,21 @@ uv add git+https://github.com/ryn-cx/rainbow-roll
 
 ## Quick Start
 
-### Basic Usage (Anonymous)
+### Create Client
 
 ```python
 from rainbow_roll import RainbowRoll
 
 # Create anonymous client
-client = RainbowRoll()
+anonymous_client = RainbowRoll()
 
 # Create authenticated client
-client = RainbowRoll(username="Username", password="Password")
+authenticated_client = RainbowRoll(username="Username", password="Password")
+```
 
+### Access API
+
+```python
 # Get new releases
 new_videos = client.get_browse()
 
