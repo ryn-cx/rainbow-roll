@@ -1,10 +1,9 @@
 # Rainbow Roll
 
-[![Python](https://img.shields.io/badge/python->=3.13-blue.svg)](https://www.python.org/downloads/)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https://raw.githubusercontent.com/ryn-cx/rainbow-roll/refs/heads/master/pyproject.toml)
+![GitHub License](https://img.shields.io/github/license/ryn-cx/rainbow-roll)
 
 An unofficial Python API client for Crunchyroll that provides easy access to series, seasons, episodes, and browse functionality.
-
 ## Features
 
 - **Anonymous or Authenticated**: Support for both anonymous and authenticated access
