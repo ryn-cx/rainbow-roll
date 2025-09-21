@@ -3,9 +3,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class PosterTallItem(BaseModel):
@@ -185,7 +188,7 @@ class Datum(BaseModel):
     channel_id: str
     slug: str
     title: str
-    last_public: str
+    last_public: datetime
     type: str
     promo_title: str
     new: bool

@@ -3,9 +3,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class AdBreak(BaseModel):
@@ -66,7 +69,7 @@ class EpisodeMetadata(BaseModel):
     duration_ms: int
     eligible_region: str
     episode: str
-    episode_air_date: str
+    episode_air_date: datetime
     episode_number: int
     extended_maturity_rating: ExtendedMaturityRating
     free_available_date: str
@@ -78,7 +81,7 @@ class EpisodeMetadata(BaseModel):
     is_subbed: bool
     mature_blocked: bool
     maturity_ratings: list[str]
-    premium_available_date: str
+    premium_available_date: datetime
     premium_date: None
     roles: list[str]
     season_display_number: str
@@ -93,7 +96,7 @@ class EpisodeMetadata(BaseModel):
     series_title: str
     subtitle_locales: list[str]
     tenant_categories: list[str] | None = None
-    upload_date: str
+    upload_date: datetime
     versions: list[Version] | None = None
     livestream: Livestream | None = None
 
@@ -127,7 +130,7 @@ class Datum(BaseModel):
     promo_title: str
     linked_resource_key: str
     images: Images
-    last_public: str
+    last_public: datetime
     slug_title: str
     external_id: str
     description: str
