@@ -1,0 +1,241 @@
+{
+  "data": [
+    {
+      "id": "G619CPMQ1",
+      "channel_id": "crunchyroll",
+      "title": "DAN DA DAN",
+      "slug_title": "dan-da-dan",
+      "series_id": "GG5H5XQ0D",
+      "season_display_number": "1",
+      "season_sequence_number": 1,
+      "season_number": 2,
+      "is_complete": false,
+      "description": "",
+      "keywords": [],
+      "season_tags": [
+        "fall-2024"
+      ],
+      "images": {},
+      "extended_maturity_rating": {
+        "system": "cr-tv",
+        "rating": "16",
+        "level": "M2"
+      },
+      "maturity_ratings": [
+        "TV-14"
+      ],
+      "content_descriptors": [
+        "Sexual Violence",
+        "Smoking",
+        "Suggestive Dialogue",
+        "Suicide",
+        "Violence"
+      ],
+      "is_mature": false,
+      "mature_blocked": false,
+      "is_subbed": true,
+      "is_dubbed": true,
+      "is_simulcast": false,
+      "seo_title": "",
+      "seo_description": "",
+      "availability_notes": "",
+      "audio_locales": [
+        "ja-JP"
+      ],
+      "subtitle_locales": [
+        "fr-FR",
+        "es-419",
+        "it-IT",
+        "ar-SA",
+        "de-DE",
+        "en-US",
+        "ru-RU",
+        "es-ES",
+        "pt-BR"
+      ],
+      "audio_locale": "ja-JP",
+      "versions": [
+        {
+          "audio_locale": "ja-JP",
+          "guid": "G619CPMQ1",
+          "original": true,
+          "variant": ""
+        },
+        {
+          "audio_locale": "en-US",
+          "guid": "GYJQC1VNW",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "fr-FR",
+          "guid": "GRNQCJ4KX",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "de-DE",
+          "guid": "GYK5CNX22",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "hi-IN",
+          "guid": "GYMGC3V02",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "es-419",
+          "guid": "GR75CD9GG",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "pt-BR",
+          "guid": "GR9PC23KW",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "es-ES",
+          "guid": "G6X0C40VD",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "it-IT",
+          "guid": "GR49C72GM",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "ta-IN",
+          "guid": "GY19CPMKE",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "te-IN",
+          "guid": "GRJQC1VP8",
+          "original": false,
+          "variant": ""
+        }
+      ],
+      "identifier": "GG5H5XQ0D|S1",
+      "number_of_episodes": 12
+    },
+    {
+      "id": "GRJQC1E51",
+      "channel_id": "crunchyroll",
+      "title": "DAN DA DAN Season 2",
+      "slug_title": "dan-da-dan-season-2",
+      "series_id": "GG5H5XQ0D",
+      "season_display_number": "2",
+      "season_sequence_number": 2,
+      "season_number": 3,
+      "is_complete": false,
+      "description": "",
+      "keywords": [],
+      "season_tags": [
+        "summer-2025"
+      ],
+      "images": {},
+      "extended_maturity_rating": {
+        "system": "cr-tv",
+        "rating": "16",
+        "level": "M2"
+      },
+      "maturity_ratings": [
+        "TV-14"
+      ],
+      "content_descriptors": [
+        "Sexual Violence",
+        "Smoking",
+        "Suggestive Dialogue",
+        "Suicide",
+        "Violence"
+      ],
+      "is_mature": false,
+      "mature_blocked": false,
+      "is_subbed": true,
+      "is_dubbed": true,
+      "is_simulcast": true,
+      "seo_title": "",
+      "seo_description": "",
+      "availability_notes": "",
+      "audio_locales": [
+        "ja-JP"
+      ],
+      "subtitle_locales": [
+        "ru-RU",
+        "fr-FR",
+        "id-ID",
+        "en-US",
+        "it-IT",
+        "ar-SA",
+        "es-ES",
+        "es-419",
+        "pt-BR",
+        "de-DE"
+      ],
+      "audio_locale": "ja-JP",
+      "versions": [
+        {
+          "audio_locale": "ja-JP",
+          "guid": "GRJQC1E51",
+          "original": true,
+          "variant": ""
+        },
+        {
+          "audio_locale": "en-US",
+          "guid": "G6NQCJVPD",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "fr-FR",
+          "guid": "GRK5CND5G",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "de-DE",
+          "guid": "GRMGC3G80",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "es-419",
+          "guid": "GRE5CQN4P",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "pt-BR",
+          "guid": "G675CDJXW",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "es-ES",
+          "guid": "G69PC2G1P",
+          "original": false,
+          "variant": ""
+        },
+        {
+          "audio_locale": "it-IT",
+          "guid": "GYX0C4ZP9",
+          "original": false,
+          "variant": ""
+        }
+      ],
+      "identifier": "GG5H5XQ0D|S2",
+      "number_of_episodes": 12
+    }
+  ],
+  "meta": {
+    "versions_considered": true
+  },
+  "total": 2
+}

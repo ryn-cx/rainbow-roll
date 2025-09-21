@@ -1,0 +1,21 @@
+    async def async_get_access_token(self) -> str:
+        options = ChromiumOptions()
+        options.headless = True
+        async with Chrome() as browser:
+            tab = await browser.start()
+
+            async def capture_auth_response(response: dict[str, Any]) -> None:
+                if (
+                    response["params"]["response"]["url"] == "https://beta-api.crunchyroll.com/auth/v1/token"
+                    and response["params"]["response"]["status"] == 200 # noqa: PLR2004
+                ):
+                    request_id = response["params"]["requestId"]
+                    body = await tab.get_network_response_body(request_id)
+                    content = json.loads(body)
+                    self.access_token = content["access_token"]
+
+            # Register the callback
+            await tab.enable_network_events()
+            await tab.on(NetworkEvent.RESPONSE_RECEIVED, capture_auth_response)
+            await tab.go_to("https://www.crunchyroll.com")
+            return self.access_token
