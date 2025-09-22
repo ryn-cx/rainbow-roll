@@ -1,5 +1,8 @@
+import contextlib
 import json
+import re
 import subprocess
+from datetime import datetime
 from pathlib import Path
 
 import datamodel_code_generator
@@ -45,7 +48,12 @@ def apply_override(lines: list[str], override: Override, name: str) -> None:
             continue
 
         if line.startswith(f"    {override.field_name}:"):
-            lines[i] = f"    {override.replacement}"
+            lines[i] = re.sub(
+                rf"\b{re.escape(override.original)}\b",
+                override.replacement,
+                lines[i],
+                count=1,
+            )
             return
 
     # If we reach here, the override wasn't applied
@@ -69,18 +77,42 @@ def add_extra_imports(lines: list[str], extra_imports: str) -> None:
     lines.insert(line_with_first_class, extra_imports)
 
 
+INPUT_TYPE = dict[str, "INPUT_TYPE | datetime"] | list["INPUT_TYPE | datetime"]
+
+
+def try_to_convert_everything_to_datetime(input_data: INPUT_TYPE) -> None:
+    if isinstance(input_data, dict):
+        for key, value in input_data.items():
+            if isinstance(value, str):
+                with contextlib.suppress(ValueError):
+                    input_data[key] = datetime.fromisoformat(value)
+            elif isinstance(value, (dict, list)):
+                try_to_convert_everything_to_datetime(value)
+    # reportUnnecessaryIsInstance - isinstance is not required but it is easier to read.
+    elif isinstance(input_data, list):  # type: ignore[reportUnnecessaryIsInstance]
+        for i, item in enumerate(input_data):
+            if isinstance(item, str):
+                with contextlib.suppress(ValueError):
+                    input_data[i] = datetime.fromisoformat(item)
+            elif isinstance(item, (dict, list)):
+                try_to_convert_everything_to_datetime(item)
+
+
 def generate_schema(input_data: str, output_file: Path) -> None:
     """Generate a Pydantic model schema from JSON data."""
+    loaded_data = json.loads(input_data)
+    try_to_convert_everything_to_datetime(loaded_data)
     output_file.parent.mkdir(parents=True, exist_ok=True)
     datamodel_code_generator.generate(
-        input_=input_data,
+        input_=loaded_data,
         output=output_file,
-        input_file_type=datamodel_code_generator.InputFileType.Json,
+        input_file_type=datamodel_code_generator.InputFileType.Dict,
         output_model_type=datamodel_code_generator.DataModelType.PydanticV2BaseModel,
         snake_case_field=True,
         disable_timestamp=True,
         extra_fields="forbid",
         target_python_version=datamodel_code_generator.PythonVersion.PY_313,
+        output_datetime_class=datamodel_code_generator.DatetimeClassType.Awaredatetime,
     )
 
     lines = output_file.read_text().splitlines()

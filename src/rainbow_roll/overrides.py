@@ -1,31 +1,17 @@
-from pydantic import BaseModel
+from pydantic.dataclasses import dataclass
 
-EXTRA_IMPORTS = """from datetime import datetime # noqa: TC003"""
+EXTRA_IMPORTS = ""
 
 
-class Override(BaseModel):
+@dataclass
+class Override:
     endpoint: str
     model: str
     field_name: str
+    original: str
     replacement: str
 
 
-OVERRIDES: list[Override] = []
+override_values = []
 
-
-def override(endpoint: str, model: str, field_name: str, new_type: str) -> None:
-    OVERRIDES.append(
-        Override(
-            endpoint=endpoint,
-            model=model,
-            field_name=field_name,
-            replacement=f"{field_name}: {new_type}",
-        ),
-    )
-
-
-override("browse", "Datum", "last_public", "datetime")
-override("browse_episode", "EpisodeMetadata", "episode_air_date", "datetime")
-override("browse_episode", "EpisodeMetadata", "premium_available_date", "datetime")
-override("browse_episode", "EpisodeMetadata", "upload_date", "datetime")
-override("browse_episode", "Datum", "last_public", "datetime")
+OVERRIDES = [Override(*override_value) for override_value in override_values]
