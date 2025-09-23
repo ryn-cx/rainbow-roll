@@ -9,7 +9,7 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "datamodel-code-generator>=0.33.0",
-    "genson",
+    "gapi",
     "pydantic>=2.11.7",
     "requests>=2.32.5",
 ]
@@ -60,4 +60,4 @@ convention = "google"
 "tests/**/*.py" = ["S101"] # Asserts should be allowed in tests.
 
 [tool.uv.sources]
-genson = { git = "https://github.com/ryn-cx/GenSON" }
+gapi = { git = "https://github.com/ryn-cx/gapi" }

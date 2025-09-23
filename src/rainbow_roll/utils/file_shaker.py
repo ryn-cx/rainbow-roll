@@ -2,8 +2,10 @@ import json
 import logging
 from pathlib import Path
 
+import gapi
+
 from rainbow_roll.constants import RAINBOW_ROLL_DIR, TEST_FILE_DIR
-from rainbow_roll.utils.update_files import generate_schema, update_response
+from rainbow_roll.utils.update_files import generate_schema
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +43,7 @@ def shake_files(endpoint: Path, file_type: str) -> None:
 
 def shake_response(endpoint: Path) -> None:
     """Check for redundant response files."""
-    update_response(endpoint)
+    gapi.generate(endpoint, RAINBOW_ROLL_DIR / "models/{endpoint.name}.py")
     shake_files(endpoint, "response")
 
 
