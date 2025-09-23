@@ -1,12 +1,10 @@
 import base64
-import json
 import logging
 import re
 import uuid
 from datetime import datetime, timedelta
 from typing import Any
 
-import gapi
 import requests
 from pydantic import BaseModel, ValidationError
 
@@ -14,8 +12,8 @@ from rainbow_roll.api.browse import Browse
 from rainbow_roll.api.episodes import Episodes
 from rainbow_roll.api.seasons import Seasons
 from rainbow_roll.api.series import Series
-from rainbow_roll.constants import RAINBOW_ROLL_DIR, TEST_FILE_DIR
 from rainbow_roll.exceptions import HTTPError
+from rainbow_roll.utils.update_files import add_test_file, generate_schema
 
 DEVICE_ID = uuid.uuid4().hex
 
@@ -141,15 +139,7 @@ class RainbowRoll(Browse, Series, Seasons, Episodes):
         try:
             return response_model.model_validate(data)
         except ValidationError as e:
-            endpoint_folder = TEST_FILE_DIR / name
-            response_folder = endpoint_folder / "response"
-            new_json_path = response_folder / f"{uuid.uuid4().hex}.json"
-            new_json_path.parent.mkdir(parents=True, exist_ok=True)
-            new_json_path.write_text(json.dumps(data, indent=2))
-            gapi.generate(
-                response_folder,
-                RAINBOW_ROLL_DIR / "models/{endpoint.name}.py",
-            )
-
+            add_test_file(name, data)
+            generate_schema(name)
             msg = "Parsing error, Pydantic updated, try again."
             raise ValueError(msg) from e

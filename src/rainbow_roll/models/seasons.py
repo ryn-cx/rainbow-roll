@@ -70,7 +70,7 @@ class Meta(BaseModel):
     versions_considered: bool
 
 
-class ModelItem(BaseModel):
+class Model(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )

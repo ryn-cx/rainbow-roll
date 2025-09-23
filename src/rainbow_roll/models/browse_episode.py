@@ -53,7 +53,7 @@ class EpisodeMetadata(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    ad_breaks: list[AdBreak]
+    ad_breaks: list[AdBreak] | None = None
     audio_locale: str
     availability_ends: AwareDatetime
     availability_notes: str
@@ -136,7 +136,7 @@ class Datum(BaseModel):
     type: str
 
 
-class ModelItem(BaseModel):
+class Model(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )

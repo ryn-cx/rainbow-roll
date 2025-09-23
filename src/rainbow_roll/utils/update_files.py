@@ -1,152 +1,70 @@
-import contextlib
 import json
-import re
-import subprocess
-from datetime import datetime
+import logging
+import uuid
 from pathlib import Path
+from typing import Any
 
-import datamodel_code_generator
+import gapi
 
 from rainbow_roll.constants import RAINBOW_ROLL_DIR, TEST_FILE_DIR
-from rainbow_roll.overrides import EXTRA_IMPORTS, OVERRIDES, Override
+
+logger = logging.getLogger(__name__)
 
 
-def combine_json_files(input_folder: Path) -> str:
-    input_files = input_folder.glob("*.json")
-    input_contents = [file.read_bytes() for file in input_files]
-    input_parsed = [json.loads(content) for content in input_contents]
-    return json.dumps(input_parsed)
+def remove_redundant_files(endpoint: Path) -> None:
+    temp_output_schema = RAINBOW_ROLL_DIR / f"{endpoint.name}.model.temp.py"
+    good_schema_path = output_file(endpoint.name)
+    good_schema_text = good_schema_path.read_text()
 
+    # Loop through all of the files while ignoring a specific file each time to make
+    # sure each file is necessary to generate the schema.
+    input_files = list(endpoint.glob("*.json"))
+    for i, _ in enumerate(input_files):
+        test_files = input_files[:i] + input_files[i + 1 :]
+        gapi.generate_from_files(test_files, temp_output_schema)
+        test_schema_text = temp_output_schema.read_text()
 
-def apply_overrides(lines: list[str], name: str) -> None:
-    for override in OVERRIDES:
-        apply_override(lines, override, name)
-
-
-def apply_override(lines: list[str], override: Override, name: str) -> None:
-    """Replace specific field definitions in the generated code.
-
-    Args:
-        lines: List of code lines to modify
-        override: Override configuration specifying model, field, and replacement
-        name: Name of the file being processed
-
-    Raises:
-        ValueError: If the override target is not found
-    """
-    if name != f"{override.endpoint}.py":
-        return
-
-    current_class = None
-
-    for i, line in enumerate(lines):
-        if line.startswith("class ") and line.endswith(":"):
-            current_class = line.split("class ")[1].split("(")[0]
-            continue
-
-        if current_class != override.model:
-            continue
-
-        if line.startswith(f"    {override.field_name}:"):
-            lines[i] = re.sub(
-                rf"\b{re.escape(override.original)}\b",
-                override.replacement,
-                lines[i],
-                count=1,
-            )
+        if test_schema_text == good_schema_text:
+            logger.info("File %s is redundant", input_files[i].name)
+            input_files[i].unlink()
+            remove_redundant_files(endpoint)
             return
 
-    # If we reach here, the override wasn't applied
-    msg = (
-        "Unable to apply override "
-        f"{override.endpoint}.{override.model}.{override.field_name}"
-    )
-    raise ValueError(msg)
+    temp_output_schema.unlink()
 
 
-def add_extra_imports(lines: list[str], extra_imports: str) -> None:
-    """Add extra import statements to the generated code.
-
-    Args:
-        lines: List of code lines to modify
-        extra_imports: String containing extra import statements to add
-    """
-    line_with_first_class = next(
-        (i for i, line in enumerate(lines) if line.startswith("class ")),
-    )
-    lines.insert(line_with_first_class, extra_imports)
+def test_files_folder(endpoint: str) -> Path:
+    """Get the test files folder path for a given endpoint."""
+    return TEST_FILE_DIR / endpoint
 
 
-INPUT_TYPE = dict[str, "INPUT_TYPE | datetime"] | list["INPUT_TYPE | datetime"]
+def output_file(endpoint: str) -> Path:
+    """Get the output file path for a given endpoint."""
+    return RAINBOW_ROLL_DIR / f"models/{endpoint}.py"
 
 
-def try_to_convert_everything_to_datetime(input_data: INPUT_TYPE) -> None:
-    if isinstance(input_data, dict):
-        for key, value in input_data.items():
-            if isinstance(value, str):
-                with contextlib.suppress(ValueError):
-                    input_data[key] = datetime.fromisoformat(value)
-            elif isinstance(value, (dict, list)):
-                try_to_convert_everything_to_datetime(value)
-    # reportUnnecessaryIsInstance - isinstance is not required but it is easier to read.
-    elif isinstance(input_data, list):  # type: ignore[reportUnnecessaryIsInstance]
-        for i, item in enumerate(input_data):
-            if isinstance(item, str):
-                with contextlib.suppress(ValueError):
-                    input_data[i] = datetime.fromisoformat(item)
-            elif isinstance(item, (dict, list)):
-                try_to_convert_everything_to_datetime(item)
+def add_test_file(endpoint: str, data: dict[str, Any]) -> None:
+    """Add a new test file for a given endpoint."""
+    endpoint_folder = test_files_folder(endpoint)
+    new_json_path = endpoint_folder / f"{uuid.uuid4()}.json"
+    new_json_path.parent.mkdir(parents=True, exist_ok=True)
+    new_json_path.write_text(json.dumps(data, indent=2))
 
 
-def generate_schema(input_data: str, output_file: Path) -> None:
-    """Generate a Pydantic model schema from JSON data."""
-    loaded_data = json.loads(input_data)
-    try_to_convert_everything_to_datetime(loaded_data)
-    output_file.parent.mkdir(parents=True, exist_ok=True)
-    datamodel_code_generator.generate(
-        input_=loaded_data,
-        output=output_file,
-        input_file_type=datamodel_code_generator.InputFileType.Dict,
-        output_model_type=datamodel_code_generator.DataModelType.PydanticV2BaseModel,
-        snake_case_field=True,
-        disable_timestamp=True,
-        extra_fields="forbid",
-        target_python_version=datamodel_code_generator.PythonVersion.PY_313,
-        output_datetime_class=datamodel_code_generator.DatetimeClassType.Awaredatetime,
-    )
-
-    lines = output_file.read_text().splitlines()
-    apply_overrides(lines, output_file.name)
-    add_extra_imports(lines, EXTRA_IMPORTS)
-
-    # Remove the last 3 lines which will contain the extra wrapper class used to combine
-    # files into a single json file which is not actually used by the API
-    lines = "\n".join(lines[:-3])
-    output_file.write_text(lines)
-
-    subprocess.run(
-        ["uv", "run", "ruff", "check", "--fix", str(output_file)],  # noqa: S607
-        check=False,
-    )
-    subprocess.run(
-        ["uv", "run", "ruff", "format", str(output_file)],  # noqa: S607
-        check=False,
-    )
-
-
-def update_response(endpoint: Path) -> None:
-    """Update the response schema for a given endpoint."""
-    response_input_dumped = combine_json_files(endpoint / "response")
-    output_schema = RAINBOW_ROLL_DIR / f"models/response/{endpoint.name}.py"
-    generate_schema(response_input_dumped, output_schema)
+def generate_schema(endpoint: str) -> None:
+    """Generate a Pydantic schema from test files for a given endpoint."""
+    gapi.generate_from_folder(test_files_folder(endpoint), output_file(endpoint))
 
 
 def update_all_schemas() -> None:
     """Update all response schemas based on input data."""
-    for endpoint in TEST_FILE_DIR.glob("*"):
+    for endpoint in (TEST_FILE_DIR).glob("*"):
         if endpoint.is_dir():
-            update_response(endpoint)
+            logger.info("Updating schema for %s", endpoint.name)
+            generate_schema(endpoint.name)
+            remove_redundant_files(endpoint)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     update_all_schemas()

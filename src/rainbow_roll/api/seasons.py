@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from rainbow_roll.api.rainbow_roll_protocol import RainbowRollProtocol
-from rainbow_roll.models.response.seasons import ModelItem
+from rainbow_roll.models.seasons import Model
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,8 @@ class Seasons(RainbowRollProtocol):
             headers=headers,
         )
 
-    def parse_seasons(self, data: dict[str, Any]) -> ModelItem:
-        return self.parse_response(ModelItem, data, "seasons")
+    def parse_seasons(self, data: dict[str, Any]) -> Model:
+        return self.parse_response(Model, data, "seasons")
 
     def get_seasons(
         self,
@@ -40,7 +40,7 @@ class Seasons(RainbowRollProtocol):
         *,
         preferred_audio_language: str | None = None,
         locale: str = "en-US",
-    ) -> ModelItem:
+    ) -> Model:
         data = self.download_seasons(
             series_id,
             preferred_audio_language=preferred_audio_language,

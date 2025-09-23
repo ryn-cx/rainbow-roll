@@ -1,4 +1,5 @@
 import json
+from collections.abc import Iterator
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -6,19 +7,19 @@ from typing import Any
 import pytest
 
 from rainbow_roll import RainbowRoll
-from rainbow_roll.constants import TEST_FILE_DIR
+from rainbow_roll.utils.update_files import test_files_folder
 
 client = RainbowRoll()
 
 
 class TestParsing:
-    def get_test_files(self, endpoint: str) -> list[Path]:
+    def get_test_files(self, endpoint: str) -> Iterator[Path]:
         """Get all JSON test files for a given endpoint."""
-        dir_path = TEST_FILE_DIR / endpoint / "response"
+        dir_path = test_files_folder(endpoint)
         if not dir_path.exists():
             pytest.fail(f"No {endpoint} directory found")
 
-        return list(dir_path.glob("*.json"))
+        return dir_path.glob("*.json")
 
     def test_browse_parsing(self) -> None:
         """Test that browse JSON files can be parsed without errors."""

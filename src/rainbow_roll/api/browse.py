@@ -6,8 +6,8 @@ from datetime import datetime
 from typing import Any, Literal, overload
 
 from rainbow_roll.api.rainbow_roll_protocol import RainbowRollProtocol
-from rainbow_roll.models.response.browse import ModelItem as BaseModelItem
-from rainbow_roll.models.response.browse_episode import ModelItem as EpisodeModelItem
+from rainbow_roll.models.browse import Model as BaseModel
+from rainbow_roll.models.browse_episode import Model as EpisodeModel
 
 logger = logging.getLogger(__name__)
 
@@ -48,24 +48,24 @@ class Browse(RainbowRollProtocol):
         self,
         data: dict[str, Any],
         type: Literal["episode"],
-    ) -> EpisodeModelItem: ...
+    ) -> EpisodeModel: ...
 
     @overload
     def parse_browse(
         self,
         data: dict[str, Any],
         type: None = None,
-    ) -> BaseModelItem: ...
+    ) -> BaseModel: ...
 
     def parse_browse(
         self,
         data: dict[str, Any],
         type: Literal["episode"] | None = None,  # noqa: A002
-    ) -> BaseModelItem | EpisodeModelItem:
+    ) -> BaseModel | EpisodeModel:
         if type is None:
-            return self.parse_response(BaseModelItem, data, "browse")
+            return self.parse_response(BaseModel, data, "browse")
         if type == "episode":
-            return self.parse_response(EpisodeModelItem, data, "browse_episode")
+            return self.parse_response(EpisodeModel, data, "browse_episode")
 
         msg = f"Unsupported type for browse: {type}"
         raise ValueError(msg)
@@ -81,7 +81,7 @@ class Browse(RainbowRollProtocol):
         type: None = None,
         start: int | None = None,
         ratings: Literal[True] | None = None,
-    ) -> BaseModelItem: ...
+    ) -> BaseModel: ...
 
     @overload
     def get_browse(
@@ -94,7 +94,7 @@ class Browse(RainbowRollProtocol):
         type: Literal["episode"],
         start: int | None = None,
         ratings: Literal[True] | None = None,
-    ) -> EpisodeModelItem: ...
+    ) -> EpisodeModel: ...
 
     def get_browse(  # noqa: PLR0913
         self,
@@ -106,7 +106,7 @@ class Browse(RainbowRollProtocol):
         type: Literal["episode"] | None = None,  # noqa: A002
         start: int | None = None,
         ratings: Literal[True] | None = None,
-    ) -> BaseModelItem | EpisodeModelItem:
+    ) -> BaseModel | EpisodeModel:
         data = self.download_browse(
             n=n,
             sort_by=sort_by,
@@ -129,7 +129,7 @@ class Browse(RainbowRollProtocol):
         sort_by: str = "newly_added",
         ratings: Literal[True] | None = True,
         end_date: datetime | None = None,
-    ) -> BaseModelItem:
+    ) -> BaseModel:
         """Browse with parameters that match the internal parameters for new videos.
 
         When browsing https://www.crunchyroll.com/videos/new you will receive a URL like
@@ -177,7 +177,7 @@ class Browse(RainbowRollProtocol):
         locale: str = "en-US",
         start: int | None = None,
         sort_by: str = "newly_added",
-    ) -> EpisodeModelItem:
+    ) -> EpisodeModel:
         """Browse with parameters that match the internal parameters for discover.
 
         When browsing https://www.crunchyroll.com/discover you will receive a URL like

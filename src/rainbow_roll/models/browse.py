@@ -191,7 +191,7 @@ class Datum(BaseModel):
     new: bool
 
 
-class ModelItem(BaseModel):
+class Model(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
