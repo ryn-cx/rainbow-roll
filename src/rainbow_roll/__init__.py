@@ -13,7 +13,7 @@ from rainbow_roll.api.episodes import Episodes
 from rainbow_roll.api.seasons import Seasons
 from rainbow_roll.api.series import Series
 from rainbow_roll.exceptions import HTTPError
-from rainbow_roll.utils.update_files import add_test_file, generate_schema
+from rainbow_roll.utils.update_files import Updater
 
 DEVICE_ID = uuid.uuid4().hex
 
@@ -139,7 +139,9 @@ class RainbowRoll(Browse, Series, Seasons, Episodes):
         try:
             return response_model.model_validate(data)
         except ValidationError as e:
-            add_test_file(name, data)
-            generate_schema(name)
+            updater = Updater(name)
+            updater.add_test_file(data)
+            updater.generate_schema()
+            updater.remove_redundant_files()
             msg = "Parsing error, Pydantic updated, try again."
             raise ValueError(msg) from e

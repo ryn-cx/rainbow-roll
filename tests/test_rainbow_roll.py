@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from rainbow_roll import RainbowRoll
-from rainbow_roll.utils.update_files import test_files_folder
+from rainbow_roll.utils.update_files import Updater
 
 client = RainbowRoll()
 
@@ -15,7 +15,8 @@ client = RainbowRoll()
 class TestParsing:
     def get_test_files(self, endpoint: str) -> Iterator[Path]:
         """Get all JSON test files for a given endpoint."""
-        dir_path = test_files_folder(endpoint)
+        updater = Updater(endpoint)
+        dir_path = updater.input_folder()
         if not dir_path.exists():
             pytest.fail(f"No {endpoint} directory found")
 
