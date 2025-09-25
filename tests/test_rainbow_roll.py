@@ -64,8 +64,8 @@ class TestGet:
         first_page = client.get_browse_videos_new()
         last_date_on_firt_page = first_page.data[-1].last_public
 
-        response = client.get_browse_videos_new(
+        response = client.get_all_browse_videos_new(
             end_date=last_date_on_firt_page - timedelta(days=1),
         )
         # Make sure 2 pages of results were fetched
-        assert len(response.data) == 72  # noqa: PLR2004
+        assert len(response) == 72  # noqa: PLR2004

@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Literal, overload
 
 from rainbow_roll.api.rainbow_roll_protocol import RainbowRollProtocol
+from rainbow_roll.models.browse import Datum
 from rainbow_roll.models.browse import Model as BaseModel
 from rainbow_roll.models.browse_episode import Model as EpisodeModel
 
@@ -128,7 +129,6 @@ class Browse(RainbowRollProtocol):
         start: int | None = None,
         sort_by: str = "newly_added",
         ratings: Literal[True] | None = True,
-        end_date: datetime | None = None,
     ) -> BaseModel:
         """Browse with parameters that match the internal parameters for new videos.
 
@@ -136,12 +136,6 @@ class Browse(RainbowRollProtocol):
         https://www.crunchyroll.com/content/v2/discover/browse?n=36&sort_by=newly_added&ratings=true&preferred_audio_language=ja-JP&locale=en-US
         this will exactly match that URL structure.
         """
-        # For simplicity if no end_date is given set it to the current date so only 1
-        # page will be downloaded.
-        if end_date is None:
-            end_date = datetime.now().astimezone()
-
-        # Download current page
         data = self.download_browse(
             n=n,
             sort_by=sort_by,
@@ -150,24 +144,41 @@ class Browse(RainbowRollProtocol):
             start=start,
             ratings=ratings,
         )
-        result = self.parse_browse(data)
+        return self.parse_browse(data)
 
-        # Recursively download pages until the last item is older than end_date or no
-        # more items are available.
-        if result.data and result.data[-1].last_public > end_date:
-            next_pages = self.get_browse_videos_new(
+    def get_all_browse_videos_new(
+        self,
+        *,
+        preferred_audio_language: str | None = None,
+        locale: str = "en-US",
+        sort_by: str = "newly_added",
+        ratings: Literal[True] | None = True,
+        end_date: datetime | None = None,
+    ) -> list[Datum]:
+        """Browse all pages with parameters for new videos until end_date is reached."""
+        start = 0
+        n = 36
+        all_data: list[Datum] = []
+
+        if end_date is None:
+            end_date = datetime.now().astimezone()
+
+        while True:
+            result = self.get_browse_videos_new(
                 n=n,
                 preferred_audio_language=preferred_audio_language,
                 locale=locale,
-                start=(start or 0) + n,
+                start=start,
                 sort_by=sort_by,
                 ratings=ratings,
-                end_date=end_date,
             )
 
-            result.data.extend(next_pages.data)
+            all_data.extend(result.data)
 
-        return result
+            if result.data[-1].last_public <= end_date or len(result.data) < n:
+                return all_data
+
+            start += n
 
     def get_browse_discover(
         self,
