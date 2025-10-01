@@ -8,19 +8,19 @@ from typing import Any
 import requests
 from pydantic import BaseModel, ValidationError
 
-from rainbow_roll.api.browse import Browse
-from rainbow_roll.api.episodes import Episodes
-from rainbow_roll.api.seasons import Seasons
-from rainbow_roll.api.series import Series
+from rainbow_roll.browse_series import BrowseSeries
+from rainbow_roll.episodes import Episodes
 from rainbow_roll.exceptions import HTTPError
-from rainbow_roll.utils.update_files import Updater
+from rainbow_roll.seasons import Seasons
+from rainbow_roll.series import Series
+from rainbow_roll.update_files import Updater
 
 DEVICE_ID = uuid.uuid4().hex
 
 logger = logging.getLogger(__name__)
 
 
-class RainbowRoll(Browse, Series, Seasons, Episodes):
+class RainbowRoll(BrowseSeries, Series, Seasons, Episodes):
     def __init__(
         self,
         username: str | None = None,
@@ -40,7 +40,7 @@ class RainbowRoll(Browse, Series, Seasons, Episodes):
         self.refresh_token = ""
         self.domain = "beta-api.crunchyroll.com"
 
-    def get_public_token(self) -> str:
+    def _get_public_token(self) -> str:
         """Get a public token from Crunchyroll."""
         if not self.public_token:
             url = "https://static.crunchyroll.com/vilos-v2/web/vilos/js/bundle.js"
@@ -59,14 +59,14 @@ class RainbowRoll(Browse, Series, Seasons, Episodes):
 
         return self.public_token
 
-    def get_access_token(self) -> str:
+    def _get_access_token(self) -> str:
         if self.access_token and self.expiration > datetime.now().astimezone():
             return self.access_token
 
         if self.anonymous:
             response = requests.post(
                 f"https://{self.domain}/auth/v1/token",
-                headers={"Authorization": f"Basic {self.get_public_token()}"},
+                headers={"Authorization": f"Basic {self._get_public_token()}"},
                 data={
                     "grant_type": "client_id",
                     "device_id": self.device_id,
@@ -92,7 +92,7 @@ class RainbowRoll(Browse, Series, Seasons, Episodes):
 
             response = requests.post(
                 f"https://{self.domain}/auth/v1/token",
-                headers={"Authorization": f"Basic {self.get_public_token()}"},
+                headers={"Authorization": f"Basic {self._get_public_token()}"},
                 data=data,
                 timeout=10,
             )
@@ -105,7 +105,7 @@ class RainbowRoll(Browse, Series, Seasons, Episodes):
         )
         return self.access_token
 
-    def get_api_request(
+    def _get_api_request(
         self,
         endpoint: str,
         params: dict[str, Any],
@@ -113,7 +113,7 @@ class RainbowRoll(Browse, Series, Seasons, Episodes):
     ) -> dict[str, Any]:
         if headers is None:
             headers = {}
-        headers["authorization"] = f"Bearer {self.get_access_token()}"
+        headers["authorization"] = f"Bearer {self._get_access_token()}"
 
         url = f"https://{self.domain}/{endpoint}"
         logger.info("Downloading API data from %s", url)
@@ -130,7 +130,7 @@ class RainbowRoll(Browse, Series, Seasons, Episodes):
 
         return response.json()
 
-    def parse_response[T: BaseModel](
+    def _parse_response[T: BaseModel](
         self,
         response_model: type[T],
         data: dict[str, Any],

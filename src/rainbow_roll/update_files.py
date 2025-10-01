@@ -13,7 +13,7 @@ class Updater(GAPIX):
         self.endpoint = endpoint
 
     def output_file(self) -> Path:
-        return RAINBOW_ROLL_DIR / f"models/{self.endpoint}.py"
+        return RAINBOW_ROLL_DIR / f"{self.endpoint}/models.py"
 
     def input_folder(self) -> Path:
         return TEST_FILE_DIR / self.endpoint

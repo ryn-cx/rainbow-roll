@@ -2,12 +2,11 @@ import json
 from collections.abc import Iterator
 from datetime import timedelta
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from rainbow_roll import RainbowRoll
-from rainbow_roll.utils.update_files import Updater
+from rainbow_roll.update_files import Updater
 
 client = RainbowRoll()
 
@@ -24,32 +23,30 @@ class TestParsing:
 
     def test_browse_parsing(self) -> None:
         """Test that browse JSON files can be parsed without errors."""
-        for json_file in self.get_test_files("browse"):
-            data: dict[str, Any] = json.loads(json_file.read_text())
-            client.parse_browse(data)
-
-    def test_browse_episode_parsing(self) -> None:
-        for json_file in self.get_test_files("browse_episode"):
-            data: dict[str, Any] = json.loads(json_file.read_text())
-            client.parse_browse(data, type="episode")
+        for json_file in self.get_test_files("browse_series"):
+            file_content = json.loads(json_file.read_text())
+            parsed = client.parse_browse_series(file_content)
+            dumped = parsed.model_dump(mode="json", by_alias=True, exclude_unset=True)
+            assert file_content == dumped
 
     def test_series_parsing(self) -> None:
         for json_file in self.get_test_files("series"):
-            data: dict[str, Any] = json.loads(json_file.read_text())
-            client.parse_series(data)
+            file_content = json.loads(json_file.read_text())
+            parsed = client.parse_series(file_content)
+            dumped = parsed.model_dump(mode="json", by_alias=True, exclude_unset=True)
+            assert file_content == dumped
 
     def test_seasons_parsing(self) -> None:
         for json_file in self.get_test_files("seasons"):
-            data: dict[str, Any] = json.loads(json_file.read_text())
-            client.parse_seasons(data)
+            file_content = json.loads(json_file.read_text())
+            parsed = client.parse_seasons(file_content)
+            dumped = parsed.model_dump(mode="json", by_alias=True, exclude_unset=True)
+            assert file_content == dumped
 
 
 class TestGet:
-    def test_get_browse_discover(self) -> None:
-        client.get_browse_discover()
-
-    def test_get_browse_videos_new(self) -> None:
-        client.get_browse_videos_new()
+    def test_get_browse_series(self) -> None:
+        client.get_browse_series()
 
     def test_get_series(self) -> None:
         client.get_series("GG5H5XQ0D")
@@ -60,12 +57,17 @@ class TestGet:
     def test_get_episodes(self) -> None:
         client.get_episodes("G619CPMQ1")
 
-    def test_get_browse_videos_new_date(self) -> None:
-        first_page = client.get_browse_videos_new()
-        last_date_on_firt_page = first_page.data[-1].last_public
 
-        response = client.get_all_browse_videos_new(
-            end_date=last_date_on_firt_page - timedelta(days=1),
+class TestCustomGet:
+    def test_get_browse_series_since_datetime(self) -> None:
+        # Get the last entry on the first page to get the date to use for the end_date
+        # for get_browse_series_since_datetime
+        first_page = client.get_browse_series()
+        last_date_on_first_page = first_page.data[-1].last_public
+
+        response = client.get_browse_series_since_datetime(
+            end_datetime=last_date_on_first_page - timedelta(days=1),
         )
-        # Make sure 2 pages of results were fetched
-        assert len(response) == 72  # noqa: PLR2004
+
+        # Each page of results has 36 entries so there should be 72 total entries.
+        assert len(client.browse_series_entries(response)) == 72  # noqa: PLR2004
