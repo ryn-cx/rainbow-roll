@@ -25,7 +25,8 @@ def update_all_schemas() -> None:
         if endpoint.is_dir():
             logger.info("Updating schema for %s", endpoint.name)
             updater = Updater(endpoint.name)
-            updater.generate_schema()
+            class_name = endpoint.name.replace("_", " ").title().replace(" ", "")
+            updater.generate_schema(class_name=class_name)
             updater.remove_redundant_files()
 
 

@@ -5,12 +5,12 @@ from typing import Any
 
 from rainbow_roll.protocol import RainbowRollProtocol
 
-from .models import Model
+from .models import Series
 
 logger = logging.getLogger(__name__)
 
 
-class Series(RainbowRollProtocol):
+class SeriesMixin(RainbowRollProtocol):
     def download_series(
         self,
         series_id: str,
@@ -29,12 +29,12 @@ class Series(RainbowRollProtocol):
             headers=headers,
         )
 
-    def parse_series(self, data: dict[str, Any], *, update: bool = False) -> Model:
+    def parse_series(self, data: dict[str, Any], *, update: bool = False) -> Series:
         if update:
-            return self._parse_response(Model, data, "browse_series")
+            return self._parse_response(Series, data, "series")
 
-        return Model.model_validate(data)
+        return Series.model_validate(data)
 
-    def get_series(self, series_id: str, *, locale: str = "en-US") -> Model:
+    def get_series(self, series_id: str, *, locale: str = "en-US") -> Series:
         data = self.download_series(series_id, locale=locale)
         return self.parse_series(data)

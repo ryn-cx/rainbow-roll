@@ -7,12 +7,12 @@ from typing import Any
 
 from rainbow_roll.protocol import RainbowRollProtocol
 
-from .models import Datum, Model
+from .models import BrowseSeries, Datum
 
 logger = logging.getLogger(__name__)
 
 
-class BrowseSeries(RainbowRollProtocol):
+class BrowseSeriesMixin(RainbowRollProtocol):
     def _download_browse_series(
         self,
         *,
@@ -43,11 +43,11 @@ class BrowseSeries(RainbowRollProtocol):
         data: dict[str, Any],
         *,
         update: bool = False,
-    ) -> Model:
+    ) -> BrowseSeries:
         if update:
-            return self._parse_response(Model, data, "browse_series")
+            return self._parse_response(BrowseSeries, data, "browse_series")
 
-        return Model.model_validate(data)
+        return BrowseSeries.model_validate(data)
 
     def get_browse_series(
         self,
@@ -57,7 +57,7 @@ class BrowseSeries(RainbowRollProtocol):
         sort_by: str = "newly_added",
         ratings: str = "true",
         locale: str = "en-US",
-    ) -> Model:
+    ) -> BrowseSeries:
         data = self._download_browse_series(
             n=n,
             sort_by=sort_by,
@@ -75,11 +75,11 @@ class BrowseSeries(RainbowRollProtocol):
         sort_by: str = "newly_added",
         ratings: str = "true",
         end_datetime: datetime | None = None,
-    ) -> list[Model]:
+    ) -> list[BrowseSeries]:
         """Browse all pages with parameters for new videos until end_date is reached."""
         start = 0
         n = 36
-        all_data: list[Model] = []
+        all_data: list[BrowseSeries] = []
 
         # Stop the user from doing something silly on accident.
         if end_datetime is None:
@@ -103,16 +103,16 @@ class BrowseSeries(RainbowRollProtocol):
 
     def browse_series_entries(
         self,
-        responses: Model | list[Model] | dict[str, Any],
+        input_data: BrowseSeries | list[BrowseSeries] | dict[str, Any],
     ) -> list[Datum]:
         """Get all of the edges for a new titles input."""
-        if isinstance(responses, list):
+        if isinstance(input_data, list):
             result: list[Datum] = []
-            for response in responses:
+            for response in input_data:
                 result.extend(self.browse_series_entries(response))
             return result
 
-        if isinstance(responses, dict):
-            responses = self.parse_browse_series(responses)
+        if isinstance(input_data, dict):
+            input_data = self.parse_browse_series(input_data)
 
-        return responses.data
+        return input_data.data

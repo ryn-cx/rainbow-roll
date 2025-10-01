@@ -91,7 +91,7 @@ class Datum(BaseModel):
     content_descriptors: list[str]
 
 
-class Model(BaseModel):
+class Series(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )

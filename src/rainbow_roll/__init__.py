@@ -3,24 +3,29 @@ import logging
 import re
 import uuid
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, overload
 
 import requests
 from pydantic import BaseModel, ValidationError
 
-from rainbow_roll.browse_series import BrowseSeries
-from rainbow_roll.episodes import Episodes
+from rainbow_roll.browse_series import BrowseSeriesMixin
+from rainbow_roll.browse_series.models import BrowseSeries
+from rainbow_roll.episodes import EpisodesMixin
+from rainbow_roll.episodes.models import Episodes
 from rainbow_roll.exceptions import HTTPError
-from rainbow_roll.seasons import Seasons
-from rainbow_roll.series import Series
+from rainbow_roll.seasons import SeasonsMixin
+from rainbow_roll.seasons.models import Seasons
+from rainbow_roll.series import SeriesMixin
+from rainbow_roll.series.models import Series
 from rainbow_roll.update_files import Updater
 
+RESPONSE_MODELS = BrowseSeries | Series | Seasons | Episodes
 DEVICE_ID = uuid.uuid4().hex
 
 logger = logging.getLogger(__name__)
 
 
-class RainbowRoll(BrowseSeries, Series, Seasons, Episodes):
+class RainbowRoll(BrowseSeriesMixin, SeriesMixin, SeasonsMixin, EpisodesMixin):
     def __init__(
         self,
         username: str | None = None,
@@ -145,3 +150,17 @@ class RainbowRoll(BrowseSeries, Series, Seasons, Episodes):
             updater.remove_redundant_files()
             msg = "Parsing error, Pydantic updated, try again."
             raise ValueError(msg) from e
+
+    @overload
+    def dump_response(self, data: list[RESPONSE_MODELS]) -> list[dict[str, Any]]: ...
+    @overload
+    def dump_response(self, data: RESPONSE_MODELS) -> dict[str, Any]: ...
+    def dump_response(
+        self,
+        data: RESPONSE_MODELS | list[RESPONSE_MODELS],
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """Dump an API response to a JSON serializable object."""
+        if isinstance(data, list):
+            return [self.dump_response(response) for response in data]
+
+        return data.model_dump(mode="json", by_alias=True, exclude_unset=True)

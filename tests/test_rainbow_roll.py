@@ -21,27 +21,30 @@ class TestParsing:
 
         return dir_path.glob("*.json")
 
-    def test_browse_parsing(self) -> None:
+    def test_browse_series_parsing(self) -> None:
         """Test that browse JSON files can be parsed without errors."""
         for json_file in self.get_test_files("browse_series"):
             file_content = json.loads(json_file.read_text())
             parsed = client.parse_browse_series(file_content)
-            dumped = parsed.model_dump(mode="json", by_alias=True, exclude_unset=True)
-            assert file_content == dumped
+            assert file_content == client.dump_response(parsed)
 
     def test_series_parsing(self) -> None:
         for json_file in self.get_test_files("series"):
             file_content = json.loads(json_file.read_text())
             parsed = client.parse_series(file_content)
-            dumped = parsed.model_dump(mode="json", by_alias=True, exclude_unset=True)
-            assert file_content == dumped
+            assert file_content == client.dump_response(parsed)
 
     def test_seasons_parsing(self) -> None:
         for json_file in self.get_test_files("seasons"):
             file_content = json.loads(json_file.read_text())
             parsed = client.parse_seasons(file_content)
-            dumped = parsed.model_dump(mode="json", by_alias=True, exclude_unset=True)
-            assert file_content == dumped
+            assert file_content == client.dump_response(parsed)
+
+    def test_episodes_parsing(self) -> None:
+        for json_file in self.get_test_files("episodes"):
+            file_content = json.loads(json_file.read_text())
+            parsed = client.parse_episodes(file_content)
+            assert file_content == client.dump_response(parsed)
 
 
 class TestGet:
