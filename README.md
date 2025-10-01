@@ -46,7 +46,7 @@ authenticated_client = RainbowRoll(username="your_username", password="your_pass
 
 ```python
 # 🆕 Get new releases
-new_videos = client.get_browse()
+new_videos = client.get_browse_series()
 
 # 📺 Get series information
 series = client.get_series("SERIES_ID")
