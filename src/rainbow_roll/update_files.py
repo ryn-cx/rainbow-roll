@@ -19,7 +19,7 @@ class Updater(GAPIX):
         return TEST_FILE_DIR / self.endpoint
 
     def class_name(self) -> str | None:
-        self.endpoint.replace("_", " ").title().replace(" ", "")
+        return self.endpoint.replace("_", " ").title().replace(" ", "")
 
 
 def update_all_schemas() -> None:
