@@ -20,6 +20,10 @@ from rainbow_roll.series.models import Series
 from rainbow_roll.update_files import Updater
 
 RESPONSE_MODELS = BrowseSeries | Series | Seasons | Episodes
+RESPONSE_MODELS_LIST = (
+    list[BrowseSeries] | list[Series] | list[Seasons] | list[Episodes]
+)
+
 DEVICE_ID = uuid.uuid4().hex
 
 logger = logging.getLogger(__name__)
@@ -152,12 +156,12 @@ class RainbowRoll(BrowseSeriesMixin, SeriesMixin, SeasonsMixin, EpisodesMixin):
             raise ValueError(msg) from e
 
     @overload
-    def dump_response(self, data: list[RESPONSE_MODELS]) -> list[dict[str, Any]]: ...
+    def dump_response(self, data: RESPONSE_MODELS_LIST) -> list[dict[str, Any]]: ...
     @overload
     def dump_response(self, data: RESPONSE_MODELS) -> dict[str, Any]: ...
     def dump_response(
         self,
-        data: RESPONSE_MODELS | list[RESPONSE_MODELS],
+        data: RESPONSE_MODELS | RESPONSE_MODELS_LIST,
     ) -> dict[str, Any] | list[dict[str, Any]]:
         """Dump an API response to a JSON serializable object."""
         if isinstance(data, list):
