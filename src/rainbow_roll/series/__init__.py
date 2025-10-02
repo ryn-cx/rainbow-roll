@@ -37,4 +37,4 @@ class SeriesMixin(RainbowRollProtocol):
 
     def get_series(self, series_id: str, *, locale: str = "en-US") -> Series:
         data = self.download_series(series_id, locale=locale)
-        return self.parse_series(data)
+        return self.parse_series(data, update=True)

@@ -38,4 +38,4 @@ class EpisodesMixin(RainbowRollProtocol):
     def get_episodes(self, series_id: str, *, locale: str = "en-US") -> Episodes:
         data = self.download_episodes(series_id, locale=locale)
 
-        return self.parse_episodes(data)
+        return self.parse_episodes(data, update=True)

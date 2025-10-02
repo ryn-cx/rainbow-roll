@@ -37,4 +37,4 @@ class SeasonsMixin(RainbowRollProtocol):
 
     def get_seasons(self, series_id: str, *, locale: str = "en-US") -> Seasons:
         data = self.download_seasons(series_id, locale=locale)
-        return self.parse_seasons(data)
+        return self.parse_seasons(data, update=True)
