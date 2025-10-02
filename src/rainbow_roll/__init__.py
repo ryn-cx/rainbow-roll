@@ -20,9 +20,7 @@ from rainbow_roll.series.models import Series
 from rainbow_roll.update_files import Updater
 
 RESPONSE_MODELS = BrowseSeries | Series | Seasons | Episodes
-RESPONSE_MODELS_LIST = (
-    list[BrowseSeries] | list[Series] | list[Seasons] | list[Episodes]
-)
+RESPONSE_MODELS_LIST = list[BrowseSeries]
 
 DEVICE_ID = uuid.uuid4().hex
 
