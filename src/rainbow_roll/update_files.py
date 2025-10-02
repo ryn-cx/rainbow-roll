@@ -18,6 +18,9 @@ class Updater(GAPIX):
     def input_folder(self) -> Path:
         return TEST_FILE_DIR / self.endpoint
 
+    def class_name(self) -> str | None:
+        self.endpoint.replace("_", " ").title().replace(" ", "")
+
 
 def update_all_schemas() -> None:
     """Update all response schemas based on input data."""
@@ -25,8 +28,7 @@ def update_all_schemas() -> None:
         if endpoint.is_dir():
             logger.info("Updating schema for %s", endpoint.name)
             updater = Updater(endpoint.name)
-            class_name = endpoint.name.replace("_", " ").title().replace(" ", "")
-            updater.generate_schema(class_name=class_name)
+            updater.generate_schema()
             updater.remove_redundant_files()
 
 
