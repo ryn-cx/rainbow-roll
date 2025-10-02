@@ -51,7 +51,7 @@ class RainbowRoll(BrowseSeriesMixin, SeriesMixin, SeasonsMixin, EpisodesMixin):
         """Get a public token from Crunchyroll."""
         if not self.public_token:
             url = "https://static.crunchyroll.com/vilos-v2/web/vilos/js/bundle.js"
-            logger.info("Downloading public token from %s", url)
+            logger.info("Downloading public token: %s", url)
             response = requests.get(url, timeout=30)
             response_text = response.text
 
@@ -123,7 +123,7 @@ class RainbowRoll(BrowseSeriesMixin, SeriesMixin, SeasonsMixin, EpisodesMixin):
         headers["authorization"] = f"Bearer {self._get_access_token()}"
 
         url = f"https://{self.domain}/{endpoint}"
-        logger.info("Downloading API data from %s", url)
+        logger.info("Downloading API data: %s", url)
         response = requests.get(
             url=url,
             headers=headers,

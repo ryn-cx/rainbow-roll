@@ -61,3 +61,7 @@ convention = "google"
 
 [tool.uv.sources]
 gapix = { git = "https://github.com/ryn-cx/gapix" }
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
