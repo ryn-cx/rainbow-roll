@@ -17,7 +17,7 @@ from rainbow_roll.seasons import SeasonsMixin
 from rainbow_roll.seasons.models import Seasons
 from rainbow_roll.series import SeriesMixin
 from rainbow_roll.series.models import Series
-from rainbow_roll.update_files import Updater
+from rainbow_roll.update_files import add_test_file, update_model
 
 RESPONSE_MODELS = BrowseSeries | Series | Seasons | Episodes
 RESPONSE_MODELS_LIST = list[BrowseSeries]
@@ -146,10 +146,8 @@ class RainbowRoll(BrowseSeriesMixin, SeriesMixin, SeasonsMixin, EpisodesMixin):
         try:
             return response_model.model_validate(data)
         except ValidationError as e:
-            updater = Updater(name)
-            updater.add_test_file(data)
-            updater.generate_schema()
-            updater.remove_redundant_files()
+            add_test_file(name, data)
+            update_model(name)
             msg = "Parsing error, Pydantic updated, try again."
             raise ValueError(msg) from e
 
