@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 from typing import Any, overload
 
 import requests
-from pydantic import BaseModel, ValidationError
+from gapi import GapiCustomizations
+from pydantic import ValidationError
 
 from rainbow_roll.browse_series import BrowseSeriesMixin
 from rainbow_roll.browse_series.models import BrowseSeries
@@ -17,7 +18,7 @@ from rainbow_roll.seasons import SeasonsMixin
 from rainbow_roll.seasons.models import Seasons
 from rainbow_roll.series import SeriesMixin
 from rainbow_roll.series.models import Series
-from rainbow_roll.update_files import add_test_file, update_model
+from rainbow_roll.update_files import save_file, update_model
 
 RESPONSE_MODELS = BrowseSeries | Series | Seasons | Episodes
 RESPONSE_MODELS_LIST = list[BrowseSeries]
@@ -137,19 +138,26 @@ class RainbowRoll(BrowseSeriesMixin, SeriesMixin, SeasonsMixin, EpisodesMixin):
 
         return response.json()
 
-    def _parse_response[T: BaseModel](
+    def _parse_response[T: RESPONSE_MODELS](
         self,
         response_model: type[T],
         data: dict[str, Any],
         name: str,
+        customizations: GapiCustomizations | None = None,
     ) -> T:
         try:
-            return response_model.model_validate(data)
+            parsed = response_model.model_validate(data)
         except ValidationError as e:
-            add_test_file(name, data)
-            update_model(name)
-            msg = "Parsing error, Pydantic updated, try again."
+            save_file(name, data)
+            update_model(name, data, customizations)
+            msg = "Parsing error, model updated, try again."
             raise ValueError(msg) from e
+
+        if self.dump_response(parsed) != data:
+            msg = "Parsed response does not match original response."
+            raise ValueError(msg)
+
+        return parsed
 
     @overload
     def dump_response(self, data: RESPONSE_MODELS_LIST) -> list[dict[str, Any]]: ...

@@ -1,6 +1,7 @@
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
-from pydantic import BaseModel
+if TYPE_CHECKING:
+    from rainbow_roll.__init__ import RESPONSE_MODELS
 
 
 class RainbowRollProtocol(Protocol):
@@ -11,7 +12,7 @@ class RainbowRollProtocol(Protocol):
         headers: dict[str, str] | None = None,
     ) -> dict[str, Any]: ...
 
-    def _parse_response[T: BaseModel](
+    def _parse_response[T: RESPONSE_MODELS](
         self,
         response_model: type[T],
         data: dict[str, Any],
