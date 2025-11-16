@@ -11,15 +11,12 @@ from gapi import (
 from rainbow_roll.constants import FILES_PATH, RAINBOW_ROLL_PATH
 
 
-def update_model(
-    name: str,
-    data: INPUT_TYPE,
-    customizations: GapiCustomizations | None = None,
-) -> None:
+def update_model(name: str, customizations: GapiCustomizations | None = None) -> None:
     """Update a specific response model based on input data."""
     schema_path = RAINBOW_ROLL_PATH / f"{name}/schema.json"
     model_path = RAINBOW_ROLL_PATH / f"{name}/models.py"
-    update_json_schema_and_pydantic_model(data, schema_path, model_path, name)
+    files_path = FILES_PATH / name
+    update_json_schema_and_pydantic_model(files_path, schema_path, model_path, name)
     apply_customizations(model_path, customizations)
 
 

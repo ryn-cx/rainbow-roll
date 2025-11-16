@@ -149,7 +149,7 @@ class RainbowRoll(BrowseSeriesMixin, SeriesMixin, SeasonsMixin, EpisodesMixin):
             parsed = response_model.model_validate(data)
         except ValidationError as e:
             save_file(name, data)
-            update_model(name, data, customizations)
+            update_model(name, customizations)
             msg = "Parsing error, model updated, try again."
             raise ValueError(msg) from e
 
