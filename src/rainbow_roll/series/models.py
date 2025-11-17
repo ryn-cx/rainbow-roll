@@ -8,7 +8,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 
-class PosterWideItem(BaseModel):
+class PosterTallItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -18,7 +18,7 @@ class PosterWideItem(BaseModel):
     source: str
 
 
-class PosterTallItem(BaseModel):
+class PosterWideItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -32,8 +32,8 @@ class Images(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    poster_wide: list[list[PosterWideItem]]
     poster_tall: list[list[PosterTallItem]]
+    poster_wide: list[list[PosterWideItem]]
 
 
 class ExtendedMaturityRating(BaseModel):
@@ -87,8 +87,8 @@ class Datum(BaseModel):
     availability_status: str
     availability_notes: str
     series_launch_year: int
-    awards: list[Award]
-    content_descriptors: list[str]
+    awards: list[Award] | None = None
+    content_descriptors: list[str] | None = None
 
 
 class Series(BaseModel):

@@ -46,7 +46,6 @@ class Datum(BaseModel):
     images: dict[str, Any]
     extended_maturity_rating: ExtendedMaturityRating
     maturity_ratings: list[str]
-    content_descriptors: list[str]
     is_mature: bool
     mature_blocked: bool
     is_subbed: bool
@@ -58,9 +57,10 @@ class Datum(BaseModel):
     audio_locales: list[str]
     subtitle_locales: list[str]
     audio_locale: str
-    versions: list[Version]
+    versions: list[Version] | None = None
     identifier: str
     number_of_episodes: int
+    content_descriptors: list[str] | None = None
 
 
 class Meta(BaseModel):

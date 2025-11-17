@@ -20,12 +20,13 @@ class Version(BaseModel):
     variant: str
 
 
-class AdBreak(BaseModel):
+class ExtendedMaturityRating(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    offset_ms: int
-    type: str
+    level: str
+    rating: str
+    system: str
 
 
 class ThumbnailItem(BaseModel):
@@ -45,79 +46,78 @@ class Images(BaseModel):
     thumbnail: list[list[ThumbnailItem]]
 
 
-class ExtendedMaturityRating(BaseModel):
+class AdBreak(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    level: str
-    rating: str
-    system: str
+    offset_ms: int
+    type: str
 
 
 class Datum(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    season_display_number: str
-    slug_title: str
+    is_dubbed: bool
+    available_date: None
+    title: str
+    series_title: str
+    availability_ends: AwareDatetime
+    media_type: str
+    versions: list[Version] | None = None
+    mature_blocked: bool
+    season_number: int
+    duration_ms: int
+    is_premium_only: bool
     maturity_ratings: list[str]
-    channel_id: str
-    audio_locale: str
-    season_slug_title: str
-    is_subbed: bool
-    versions: list[Version]
-    availability_starts: AwareDatetime
-    content_descriptors: list[str]
-    description: str
-    availability_status: str
+    id: str
     seo_title: str
+    season_display_number: str
+    is_clip: bool
+    season_id: str
+    sequence_number: float
+    availability_status: str
+    slug: str
+    season_title: str
+    recent_audio_locale: str
+    upload_date: AwareDatetime
+    series_id: str
+    seo_description: str
+    closed_captions_available: bool
+    next_episode_id: str | None = None
+    is_mature: bool
+    subtitle_locales: list[str]
+    episode_air_date: AwareDatetime
+    is_subbed: bool
+    season_tags: list[str]
+    next_episode_title: str | None = None
+    premium_date: None
+    availability_notes: str
+    channel_id: str
+    slug_title: str
+    hd_flag: bool
     premium_available_date: AwareDatetime
+    audio_locale: str
+    availability_starts: AwareDatetime
+    listing_id: str
+    free_available_date: AwareDatetime
+    description: str
+    recent_variant: str
+    season_sequence_number: int
+    production_episode_id: str
+    available_offline: bool
+    roles: list[str]
     eligible_region: str
     identifier: str
-    roles: list[str]
-    next_episode_title: str
-    ad_breaks: list[AdBreak]
-    streams_link: str
-    series_id: str
-    episode: str
-    episode_air_date: AwareDatetime
-    availability_ends: AwareDatetime
-    free_available_date: AwareDatetime
-    slug: str
-    mature_blocked: bool
-    is_clip: bool
-    premium_date: None
-    next_episode_id: str
-    media_type: str
-    production_episode_id: str
-    closed_captions_available: bool
-    sequence_number: int
-    images: Images
-    listing_id: str
-    season_title: str
-    season_id: str
-    episode_number: int
-    id: str
-    season_tags: list[str]
-    available_offline: bool
-    series_title: str
-    seo_description: str
-    availability_notes: str
+    episode_number: int | None = None
     extended_maturity_rating: ExtendedMaturityRating
-    recent_audio_locale: str
-    season_number: int
-    title: str
-    is_premium_only: bool
-    duration_ms: int
-    is_mature: bool
     series_slug_title: str
-    season_sequence_number: int
-    recent_variant: str
-    hd_flag: bool
-    available_date: None
-    subtitle_locales: list[str]
-    is_dubbed: bool
-    upload_date: AwareDatetime
+    season_slug_title: str
+    episode: str
+    images: Images
+    ad_breaks: list[AdBreak] | None = None
+    content_descriptors: list[str] | None = None
+    streams_link: str | None = None
 
 
 class Meta(BaseModel):
