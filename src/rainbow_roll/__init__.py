@@ -1,4 +1,5 @@
 import base64
+import json
 import logging
 import re
 import uuid
@@ -11,6 +12,7 @@ from pydantic import ValidationError
 
 from rainbow_roll.browse_series import BrowseSeriesMixin
 from rainbow_roll.browse_series.models import BrowseSeries
+from rainbow_roll.constants import FILES_PATH
 from rainbow_roll.episodes import EpisodesMixin
 from rainbow_roll.episodes.models import Episodes
 from rainbow_roll.exceptions import HTTPError
@@ -154,6 +156,14 @@ class RainbowRoll(BrowseSeriesMixin, SeriesMixin, SeasonsMixin, EpisodesMixin):
             raise ValueError(msg) from e
 
         if self.dump_response(parsed) != data:
+            save_file(name, data)
+            temp_path = FILES_PATH / "_temp"
+            named_temp_path = temp_path / name
+            named_temp_path.mkdir(parents=True, exist_ok=True)
+            original_path = named_temp_path / "original.json"
+            parsed_path = named_temp_path / "parsed.json"
+            original_path.write_text(json.dumps(data, indent=2))
+            parsed_path.write_text(json.dumps(self.dump_response(parsed), indent=2))
             msg = "Parsed response does not match original response."
             raise ValueError(msg)
 
