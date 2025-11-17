@@ -87,8 +87,8 @@ class Datum(BaseModel):
     availability_status: str
     availability_notes: str
     series_launch_year: int
-    awards: list[Award] | None = None
     content_descriptors: list[str] | None = None
+    awards: list[Award] | None = None
 
 
 class Series(BaseModel):
