@@ -4,8 +4,9 @@ from rainbow_roll.constants import FILES_PATH, RAINBOW_ROLL_PATH
 
 if __name__ == "__main__":
     for input_folder in FILES_PATH.iterdir():
-        if input_folder.name == ".git":
+        if input_folder.name in {".git", "_temp"} or input_folder.is_file():
             continue
+
         name = input_folder.name
         schema_path = RAINBOW_ROLL_PATH / f"{name}/schema.json"
         model_path = RAINBOW_ROLL_PATH / f"{name}/models.py"
