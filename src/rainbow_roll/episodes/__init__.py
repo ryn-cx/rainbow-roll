@@ -31,7 +31,7 @@ class EpisodesMixin(RainbowRollProtocol):
 
     def parse_episodes(self, data: dict[str, Any], *, update: bool = False) -> Episodes:
         if update:
-            return self._parse_response(Episodes, data, "episodes")
+            return self.parse_response(Episodes, data, "episodes")
 
         return Episodes.model_validate(data)
 

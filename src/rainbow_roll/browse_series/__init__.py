@@ -45,7 +45,7 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         update: bool = False,
     ) -> BrowseSeries:
         if update:
-            return self._parse_response(BrowseSeries, data, "browse_series")
+            return self.parse_response(BrowseSeries, data, "browse_series")
 
         return BrowseSeries.model_validate(data)
 

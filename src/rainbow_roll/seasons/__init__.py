@@ -31,7 +31,7 @@ class SeasonsMixin(RainbowRollProtocol):
 
     def parse_seasons(self, data: dict[str, Any], *, update: bool = False) -> Seasons:
         if update:
-            return self._parse_response(Seasons, data, "seasons")
+            return self.parse_response(Seasons, data, "seasons")
 
         return Seasons.model_validate(data)
 
