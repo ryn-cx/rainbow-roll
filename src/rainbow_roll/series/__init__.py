@@ -4,8 +4,7 @@ import logging
 from typing import Any
 
 from rainbow_roll.protocol import RainbowRollProtocol
-
-from .models import Series
+from rainbow_roll.series import models
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +28,17 @@ class SeriesMixin(RainbowRollProtocol):
             headers=headers,
         )
 
-    def parse_series(self, data: dict[str, Any], *, update: bool = False) -> Series:
+    def parse_series(
+        self,
+        data: dict[str, Any],
+        *,
+        update: bool = False,
+    ) -> models.Series:
         if update:
-            return self.parse_response(Series, data, "series")
+            return self.parse_response(models.Series, data, "series")
 
-        return Series.model_validate(data)
+        return models.Series.model_validate(data)
 
-    def get_series(self, series_id: str, *, locale: str = "en-US") -> Series:
+    def get_series(self, series_id: str, *, locale: str = "en-US") -> models.Series:
         data = self.download_series(series_id, locale=locale)
         return self.parse_series(data, update=True)

@@ -5,9 +5,8 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from rainbow_roll.browse_series import models
 from rainbow_roll.protocol import RainbowRollProtocol
-
-from .models import BrowseSeries, Datum
 
 logger = logging.getLogger(__name__)
 
@@ -43,11 +42,11 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         data: dict[str, Any],
         *,
         update: bool = False,
-    ) -> BrowseSeries:
+    ) -> models.BrowseSeries:
         if update:
-            return self.parse_response(BrowseSeries, data, "browse_series")
+            return self.parse_response(models.BrowseSeries, data, "browse_series")
 
-        return BrowseSeries.model_validate(data)
+        return models.BrowseSeries.model_validate(data)
 
     def get_browse_series(
         self,
@@ -57,7 +56,7 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         sort_by: str = "newly_added",
         ratings: str = "true",
         locale: str = "en-US",
-    ) -> BrowseSeries:
+    ) -> models.BrowseSeries:
         data = self._download_browse_series(
             n=n,
             sort_by=sort_by,
@@ -75,11 +74,11 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         sort_by: str = "newly_added",
         ratings: str = "true",
         end_datetime: datetime | None = None,
-    ) -> list[BrowseSeries]:
+    ) -> list[models.BrowseSeries]:
         """Browse all pages with parameters for new videos until end_date is reached."""
         start = 0
         n = 36
-        all_data: list[BrowseSeries] = []
+        all_data: list[models.BrowseSeries] = []
 
         # Stop the user from doing something silly on accident.
         if end_datetime is None:
@@ -103,11 +102,11 @@ class BrowseSeriesMixin(RainbowRollProtocol):
 
     def browse_series_entries(
         self,
-        input_data: BrowseSeries | list[BrowseSeries] | dict[str, Any],
-    ) -> list[Datum]:
+        input_data: models.BrowseSeries | list[models.BrowseSeries] | dict[str, Any],
+    ) -> list[models.Datum]:
         """Get all of the edges for a new titles input."""
         if isinstance(input_data, list):
-            result: list[Datum] = []
+            result: list[models.Datum] = []
             for response in input_data:
                 result.extend(self.browse_series_entries(response))
             return result

@@ -4,8 +4,7 @@ import logging
 from typing import Any
 
 from rainbow_roll.protocol import RainbowRollProtocol
-
-from .models import Seasons
+from rainbow_roll.seasons import models
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +28,17 @@ class SeasonsMixin(RainbowRollProtocol):
             headers=headers,
         )
 
-    def parse_seasons(self, data: dict[str, Any], *, update: bool = False) -> Seasons:
+    def parse_seasons(
+        self,
+        data: dict[str, Any],
+        *,
+        update: bool = False,
+    ) -> models.Seasons:
         if update:
-            return self.parse_response(Seasons, data, "seasons")
+            return self.parse_response(models.Seasons, data, "seasons")
 
-        return Seasons.model_validate(data)
+        return models.Seasons.model_validate(data)
 
-    def get_seasons(self, series_id: str, *, locale: str = "en-US") -> Seasons:
+    def get_seasons(self, series_id: str, *, locale: str = "en-US") -> models.Seasons:
         data = self.download_seasons(series_id, locale=locale)
         return self.parse_seasons(data, update=True)

@@ -3,9 +3,8 @@
 import logging
 from typing import Any
 
+from rainbow_roll.episodes import models
 from rainbow_roll.protocol import RainbowRollProtocol
-
-from .models import Episodes
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +28,18 @@ class EpisodesMixin(RainbowRollProtocol):
             headers=headers,
         )
 
-    def parse_episodes(self, data: dict[str, Any], *, update: bool = False) -> Episodes:
+    def parse_episodes(
+        self,
+        data: dict[str, Any],
+        *,
+        update: bool = False,
+    ) -> models.Episodes:
         if update:
-            return self.parse_response(Episodes, data, "episodes")
+            return self.parse_response(models.Episodes, data, "episodes")
 
-        return Episodes.model_validate(data)
+        return models.Episodes.model_validate(data)
 
-    def get_episodes(self, series_id: str, *, locale: str = "en-US") -> Episodes:
+    def get_episodes(self, series_id: str, *, locale: str = "en-US") -> models.Episodes:
         data = self.download_episodes(series_id, locale=locale)
 
         return self.parse_episodes(data, update=True)
