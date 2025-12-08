@@ -94,12 +94,16 @@ class BrowseSeriesMixin(RainbowRollProtocol):
 
     def browse_series_entries(
         self,
-        data: models.BrowseSeries | list[models.BrowseSeries],
+        input_data: models.BrowseSeries | list[models.BrowseSeries] | dict[str, Any],
     ) -> list[models.Datum]:
         """Get all of the edges for a new titles input."""
-        if isinstance(data, models.BrowseSeries):
-            return data.data
+        if isinstance(input_data, list):
+            result: list[models.Datum] = []
+            for response in input_data:
+                result.extend(self.browse_series_entries(response))
+            return result
 
-        return [
-            datum for response in data for datum in self.browse_series_entries(response)
-        ]
+        if isinstance(input_data, dict):
+            input_data = self.parse_browse_series(input_data)
+
+        return input_data.data
