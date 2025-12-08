@@ -17,8 +17,8 @@ from rainbow_roll.seasons import SeasonsMixin
 from rainbow_roll.series import SeriesMixin
 
 DEVICE_ID = uuid.uuid4().hex
-
-logger = logging.getLogger(__name__)
+DEFAULT_TIMEOUT = 30
+default_logger = logging.getLogger(__name__)
 
 
 class RainbowRoll(
@@ -31,14 +31,19 @@ class RainbowRoll(
     def client_path(self) -> Path:
         return RAINBOW_ROLL_PATH
 
-    def __init__(
+    # PLR0913 - Need more arguements to do everything required.
+    def __init__(  # noqa: PLR0913
         self,
         username: str | None = None,
         password: str | None = None,
         # These values were chosen to match the CrunchyRoll app on Windows.
         device_id: str = DEVICE_ID,
         device_type: str = "Microsoft Edge on Windows",
+        logger: logging.Logger = default_logger,
+        timeout: int = 30,
     ) -> None:
+        self.logger = logger or default_logger
+        self.timeout = timeout
         self.anonymous = not (username and password)
         self.username = username
         self.password = password
@@ -49,6 +54,7 @@ class RainbowRoll(
         self.access_token = ""
         self.refresh_token = ""
         self.domain = "beta-api.crunchyroll.com"
+        super().__init__()
 
     def _get_public_token(self) -> str:
         if not self.public_token:
@@ -59,8 +65,8 @@ class RainbowRoll(
     def _download_public_token(self) -> None:
         """Get a public token from Crunchyroll."""
         url = "https://static.crunchyroll.com/vilos-v2/web/vilos/js/bundle.js"
-        logger.info("Downloading public token: %s", url)
-        response = requests.get(url, timeout=30)
+        self.logger.info("Downloading public token: %s", url)
+        response = requests.get(url, timeout=self.timeout)
         response_text = response.text
 
         if not (match := re.search(r'prod="([\w-]+:[\w-]+)"', response_text)):
@@ -79,19 +85,20 @@ class RainbowRoll(
         return self.access_token
 
     def _download_access_token(self) -> None:
+        url = f"https://{self.domain}/auth/v1/token"
         if self.anonymous:
-            response = requests.post(
-                f"https://{self.domain}/auth/v1/token",
-                headers={"Authorization": f"Basic {self._get_public_token()}"},
-                data={
-                    "grant_type": "client_id",
-                    "device_id": self.device_id,
-                    "device_type": self.device_type,
-                },
-                timeout=10,
-            )
+            self.logger.info("Downloading anonymous access token: %s", url)
+            data = {
+                "grant_type": "client_id",
+                "device_id": self.device_id,
+                "device_type": self.device_type,
+            }
+            headers = {"Authorization": f"Basic {self._get_public_token()}"}
+            response = requests.post(url, data, headers=headers, timeout=self.timeout)
             parsed_response = response.json()
         else:
+            self.logger.info("Downloading logged in access token: %s", url)
+
             data: dict[str, Any] = {
                 "scope": "offline_access",
                 "device_id": self.device_id,
@@ -106,12 +113,8 @@ class RainbowRoll(
                 data["device_name"] = self.password
                 data["grant_type"] = "password"
 
-            response = requests.post(
-                f"https://{self.domain}/auth/v1/token",
-                headers={"Authorization": f"Basic {self._get_public_token()}"},
-                data=data,
-                timeout=10,
-            )
+            headers = {"Authorization": f"Basic {self._get_public_token()}"}
+            response = requests.post(url, data, headers=headers, timeout=self.timeout)
             parsed_response = response.json()
             self.refresh_token = parsed_response["refresh_token"]
 
@@ -131,13 +134,8 @@ class RainbowRoll(
         headers["authorization"] = f"Bearer {self._get_access_token()}"
 
         url = f"https://{self.domain}/{endpoint}"
-        logger.info("Downloading API data: %s", url)
-        response = requests.get(
-            url=url,
-            headers=headers,
-            params=params,
-            timeout=60,
-        )
+        self.logger.info("Downloading API data: %s", url)
+        response = requests.get(url, params, headers=headers, timeout=self.timeout)
 
         if response.status_code != 200:  # noqa: PLR2004
             msg = f"Unexpected response status code: {response.status_code}"
