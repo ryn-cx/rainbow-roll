@@ -1,14 +1,11 @@
 # The page https://www.crunchyroll.com/videos/new uses
 # https://www.crunchyroll.com/content/v2/discover/browse?n=36&sort_by=newly_added&ratings=true&locale=en-US
 # https://www.crunchyroll.com/content/v2/discover/browse?start=36&n=36&sort_by=newly_added&ratings=true&locale=en-US
-import logging
 from datetime import datetime
 from typing import Any
 
 from rainbow_roll.browse_series import models
 from rainbow_roll.protocol import RainbowRollProtocol
-
-logger = logging.getLogger(__name__)
 
 
 class BrowseSeriesMixin(RainbowRollProtocol):
@@ -21,17 +18,15 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         ratings: str = "true",
         locale: str = "en-US",
     ) -> dict[str, Any]:
-        # The order of the parameters marches the query even though it probably doesn't
-        # matter.
-        params: dict[str, Any] = {}
-        # Start parameter should only be included if it has a value.
+        params: dict[str, str | int] = {
+            "n": n,
+            "sort_by": sort_by,
+            "ratings": ratings,
+            "locale": locale,
+        }
+
         if start is not None:
             params["start"] = start
-
-        params["n"] = n
-        params["sort_by"] = sort_by
-        params["ratings"] = ratings
-        params["locale"] = locale
 
         headers = {"referer": "https://www.crunchyroll.com/videos/new"}
 
@@ -41,7 +36,7 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         self,
         data: dict[str, Any],
         *,
-        update: bool = False,
+        update: bool = True,
     ) -> models.BrowseSeries:
         if update:
             return self.parse_response(models.BrowseSeries, data, "browse_series")
@@ -65,11 +60,12 @@ class BrowseSeriesMixin(RainbowRollProtocol):
             ratings=ratings,
         )
 
-        return self.parse_browse_series(data, update=True)
+        return self.parse_browse_series(data)
 
     def get_browse_series_since_datetime(
         self,
         *,
+        n: int = 36,
         locale: str = "en-US",
         sort_by: str = "newly_added",
         ratings: str = "true",
@@ -77,12 +73,8 @@ class BrowseSeriesMixin(RainbowRollProtocol):
     ) -> list[models.BrowseSeries]:
         """Browse all pages with parameters for new videos until end_date is reached."""
         start = 0
-        n = 36
         all_data: list[models.BrowseSeries] = []
-
-        # Stop the user from doing something silly on accident.
-        if end_datetime is None:
-            end_datetime = datetime.now().astimezone()
+        end_datetime = end_datetime or datetime.now().astimezone()
 
         while True:
             result = self.get_browse_series(
@@ -102,16 +94,12 @@ class BrowseSeriesMixin(RainbowRollProtocol):
 
     def browse_series_entries(
         self,
-        input_data: models.BrowseSeries | list[models.BrowseSeries] | dict[str, Any],
+        data: models.BrowseSeries | list[models.BrowseSeries],
     ) -> list[models.Datum]:
         """Get all of the edges for a new titles input."""
-        if isinstance(input_data, list):
-            result: list[models.Datum] = []
-            for response in input_data:
-                result.extend(self.browse_series_entries(response))
-            return result
+        if isinstance(data, models.BrowseSeries):
+            return data.data
 
-        if isinstance(input_data, dict):
-            input_data = self.parse_browse_series(input_data)
-
-        return input_data.data
+        return [
+            datum for response in data for datum in self.browse_series_entries(response)
+        ]

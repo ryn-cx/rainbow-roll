@@ -41,7 +41,7 @@ class Datum(BaseModel):
     season_number: int
     is_complete: bool
     description: str
-    keywords: list[None]
+    keywords: list[str]
     season_tags: list[str]
     images: dict[str, Any]
     extended_maturity_rating: ExtendedMaturityRating

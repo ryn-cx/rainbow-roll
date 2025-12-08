@@ -1,32 +1,20 @@
 import base64
-import json
 import logging
 import re
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, override
+from pathlib import Path
+from typing import Any
 
 import requests
-from gapi import (
-    AbstractGapiClient,
-    GapiCustomizations,
-    apply_customizations,
-    update_json_schema_and_pydantic_model,
-)
+from gapi import AbstractGapiClient
 
 from rainbow_roll.browse_series import BrowseSeriesMixin
-from rainbow_roll.browse_series.models import BrowseSeries
-from rainbow_roll.constants import FILES_PATH, RAINBOW_ROLL_PATH
+from rainbow_roll.constants import RAINBOW_ROLL_PATH
 from rainbow_roll.episodes import EpisodesMixin
-from rainbow_roll.episodes.models import Episodes
 from rainbow_roll.exceptions import HTTPError
 from rainbow_roll.seasons import SeasonsMixin
-from rainbow_roll.seasons.models import Seasons
 from rainbow_roll.series import SeriesMixin
-from rainbow_roll.series.models import Series
-
-RESPONSE_MODELS = BrowseSeries | Series | Seasons | Episodes
-RESPONSE_MODELS_LIST = list[BrowseSeries]
 
 DEVICE_ID = uuid.uuid4().hex
 
@@ -40,6 +28,9 @@ class RainbowRoll(
     SeasonsMixin,
     EpisodesMixin,
 ):
+    def client_path(self) -> Path:
+        return RAINBOW_ROLL_PATH
+
     def __init__(
         self,
         username: str | None = None,
@@ -51,7 +42,7 @@ class RainbowRoll(
         self.anonymous = not (username and password)
         self.username = username
         self.password = password
-        self.expiration = datetime.now().astimezone()
+        self.expires_in = datetime.now().astimezone()
         self.device_id = device_id
         self.device_type = device_type
         self.public_token = ""
@@ -60,28 +51,34 @@ class RainbowRoll(
         self.domain = "beta-api.crunchyroll.com"
 
     def _get_public_token(self) -> str:
-        """Get a public token from Crunchyroll."""
         if not self.public_token:
-            url = "https://static.crunchyroll.com/vilos-v2/web/vilos/js/bundle.js"
-            logger.info("Downloading public token: %s", url)
-            response = requests.get(url, timeout=30)
-            response_text = response.text
-
-            if not (match := re.search(r'prod="([\w-]+:[\w-]+)"', response_text)):
-                msg = "Failed to extract token from bundle.js"
-                raise ValueError(msg)
-
-            encoded_public_token = match.group(1)
-            self.public_token = base64.b64encode(
-                encoded_public_token.encode("iso-8859-1"),
-            ).decode()
+            self._download_public_token()
 
         return self.public_token
 
-    def _get_access_token(self) -> str:
-        if self.access_token and self.expiration > datetime.now().astimezone():
-            return self.access_token
+    def _download_public_token(self) -> None:
+        """Get a public token from Crunchyroll."""
+        url = "https://static.crunchyroll.com/vilos-v2/web/vilos/js/bundle.js"
+        logger.info("Downloading public token: %s", url)
+        response = requests.get(url, timeout=30)
+        response_text = response.text
 
+        if not (match := re.search(r'prod="([\w-]+:[\w-]+)"', response_text)):
+            msg = "Failed to extract token from bundle.js"
+            raise ValueError(msg)
+
+        encoded_public_token = match.group(1)
+        self.public_token = base64.b64encode(
+            encoded_public_token.encode("iso-8859-1"),
+        ).decode()
+
+    def _get_access_token(self) -> str:
+        if not self.access_token or self.expires_in < datetime.now().astimezone():
+            self._download_access_token()
+
+        return self.access_token
+
+    def _download_access_token(self) -> None:
         if self.anonymous:
             response = requests.post(
                 f"https://{self.domain}/auth/v1/token",
@@ -119,10 +116,9 @@ class RainbowRoll(
             self.refresh_token = parsed_response["refresh_token"]
 
         self.access_token = parsed_response["access_token"]
-        self.expiration = datetime.now().astimezone() + timedelta(
+        self.expires_in = datetime.now().astimezone() + timedelta(
             seconds=parsed_response["expires_in"],
         )
-        return self.access_token
 
     def _get_api_request(
         self,
@@ -148,30 +144,3 @@ class RainbowRoll(
             raise HTTPError(msg)
 
         return response.json()
-
-    @override
-    def update_model(
-        self,
-        name: str,
-        model_type: str,
-        customizations: GapiCustomizations | None = None,
-    ) -> None:
-        """Update a specific response model based on input data."""
-        schema_path = RAINBOW_ROLL_PATH / f"{name}/schema.json"
-        model_path = RAINBOW_ROLL_PATH / f"{name}/models.py"
-        files_path = FILES_PATH / name
-        update_json_schema_and_pydantic_model(files_path, schema_path, model_path, name)
-        apply_customizations(model_path, customizations)
-
-    @override
-    def save_file(
-        self,
-        name: str,
-        data: dict[str, Any],
-        model_type: str,
-    ) -> None:
-        """Add a new test file for a given endpoint."""
-        input_folder = FILES_PATH / name
-        new_json_path = input_folder / f"{uuid.uuid4()}.json"
-        new_json_path.parent.mkdir(parents=True, exist_ok=True)
-        new_json_path.write_text(json.dumps(data, indent=2))

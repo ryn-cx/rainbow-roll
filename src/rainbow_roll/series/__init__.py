@@ -1,12 +1,9 @@
 # The page https://www.crunchyroll.com/series/GG5H5XQ0D/dan-da-dan uses
 # https://www.crunchyroll.com/content/v2/cms/series/GG5H5XQ0D?locale=en-US
-import logging
 from typing import Any
 
 from rainbow_roll.protocol import RainbowRollProtocol
 from rainbow_roll.series import models
-
-logger = logging.getLogger(__name__)
 
 
 class SeriesMixin(RainbowRollProtocol):
@@ -32,7 +29,7 @@ class SeriesMixin(RainbowRollProtocol):
         self,
         data: dict[str, Any],
         *,
-        update: bool = False,
+        update: bool = True,
     ) -> models.Series:
         if update:
             return self.parse_response(models.Series, data, "series")
@@ -41,4 +38,4 @@ class SeriesMixin(RainbowRollProtocol):
 
     def get_series(self, series_id: str, *, locale: str = "en-US") -> models.Series:
         data = self.download_series(series_id, locale=locale)
-        return self.parse_series(data, update=True)
+        return self.parse_series(data)
