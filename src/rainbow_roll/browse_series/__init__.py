@@ -71,7 +71,7 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         ratings: str = "true",
         end_datetime: datetime | None = None,
     ) -> list[models.BrowseSeries]:
-        """Browse all pages with parameters for new videos until end_date is reached."""
+        """Get all browse pages until end_date is reached (inclusive)."""
         start = 0
         all_data: list[models.BrowseSeries] = []
         end_datetime = end_datetime or datetime.now().astimezone()
@@ -87,7 +87,7 @@ class BrowseSeriesMixin(RainbowRollProtocol):
 
             all_data.append(result)
 
-            if result.data[-1].last_public <= end_datetime or len(result.data) < n:
+            if result.data[-1].last_public < end_datetime or len(result.data) < n:
                 return all_data
 
             start += n
@@ -96,13 +96,14 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         self,
         input_data: models.BrowseSeries | list[models.BrowseSeries] | dict[str, Any],
     ) -> list[models.Datum]:
-        """Get all of the edges for a new titles input."""
+        """Returns all of the episodes from one or more BrowseSeries entries."""
         if isinstance(input_data, list):
             result: list[models.Datum] = []
             for response in input_data:
                 result.extend(self.browse_series_entries(response))
             return result
 
+        # Support for when the raw data for a BrowseSeries is passed in as the input.
         if isinstance(input_data, dict):
             input_data = self.parse_browse_series(input_data)
 
