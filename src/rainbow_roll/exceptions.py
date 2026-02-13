@@ -1,3 +1,6 @@
+"""Exception classes for rainbow_roll."""
+
+
 class RainbowRollError(Exception):
     """Base exception for rainbow-roll library."""
 

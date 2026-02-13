@@ -1,15 +1,24 @@
-# The page https://www.crunchyroll.com/videos/new uses
-# https://www.crunchyroll.com/content/v2/discover/browse?n=36&sort_by=newly_added&ratings=true&locale=en-US
-# https://www.crunchyroll.com/content/v2/discover/browse?start=36&n=36&sort_by=newly_added&ratings=true&locale=en-US
+"""Browse series API endpoint."""
+
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Any
+from functools import cached_property
+from typing import Any, override
 
+from rainbow_roll.base_api_endpoint import BaseEndpoint
 from rainbow_roll.browse_series import models
-from rainbow_roll.protocol import RainbowRollProtocol
 
 
-class BrowseSeriesMixin(RainbowRollProtocol):
-    def _download_browse_series(
+class BrowseSeries(BaseEndpoint[models.BrowseSeries]):
+    """Provides methods to download, parse, and retrieve browse series data."""
+
+    @cached_property
+    @override
+    def _response_model(self) -> type[models.BrowseSeries]:
+        return models.BrowseSeries
+
+    def download(
         self,
         *,
         start: int | None = None,
@@ -18,6 +27,18 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         ratings: str = "true",
         locale: str = "en-US",
     ) -> dict[str, Any]:
+        """Downloads browse series data.
+
+        Args:
+            start: The starting index for pagination.
+            n: The number of results per page.
+            sort_by: The sort order.
+            ratings: Whether to include ratings.
+            locale: The locale for the request.
+
+        Returns:
+            The raw JSON response as a dict, suitable for passing to ``parse()``.
+        """
         params: dict[str, str | int] = {
             "n": n,
             "sort_by": sort_by,
@@ -30,20 +51,13 @@ class BrowseSeriesMixin(RainbowRollProtocol):
 
         headers = {"referer": "https://www.crunchyroll.com/videos/new"}
 
-        return self._get_api_request("content/v2/discover/browse", params, headers)
+        return self._client.download(
+            "content/v2/discover/browse",
+            params,
+            headers,
+        )
 
-    def parse_browse_series(
-        self,
-        data: dict[str, Any],
-        *,
-        update: bool = True,
-    ) -> models.BrowseSeries:
-        if update:
-            return self.parse_response(models.BrowseSeries, data, "browse_series")
-
-        return models.BrowseSeries.model_validate(data)
-
-    def get_browse_series(
+    def get(
         self,
         *,
         start: int | None = None,
@@ -52,17 +66,30 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         ratings: str = "true",
         locale: str = "en-US",
     ) -> models.BrowseSeries:
-        data = self._download_browse_series(
+        """Downloads and parses browse series data.
+
+        Convenience method that calls ``download()`` then ``parse()``.
+
+        Args:
+            start: The starting index for pagination.
+            n: The number of results per page.
+            sort_by: The sort order.
+            ratings: Whether to include ratings.
+            locale: The locale for the request.
+
+        Returns:
+            A BrowseSeries model containing the parsed data.
+        """
+        data = self.download(
             n=n,
             sort_by=sort_by,
             locale=locale,
             start=start,
             ratings=ratings,
         )
+        return self.parse(data)
 
-        return self.parse_browse_series(data)
-
-    def get_browse_series_since_datetime(
+    def get_since_datetime(
         self,
         *,
         n: int = 36,
@@ -71,13 +98,24 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         ratings: str = "true",
         end_datetime: datetime | None = None,
     ) -> list[models.BrowseSeries]:
-        """Get all browse pages until end_date is reached (inclusive)."""
+        """Gets all browse pages until end_date is reached (inclusive).
+
+        Args:
+            n: The number of results per page.
+            locale: The locale for the request.
+            sort_by: The sort order.
+            ratings: Whether to include ratings.
+            end_datetime: Stop when reaching this datetime.
+
+        Returns:
+            List of BrowseSeries pages.
+        """
         start = 0
         all_data: list[models.BrowseSeries] = []
         end_datetime = end_datetime or datetime.now().astimezone()
 
         while True:
-            result = self.get_browse_series(
+            result = self.get(
                 n=n,
                 locale=locale,
                 start=start,
@@ -92,7 +130,7 @@ class BrowseSeriesMixin(RainbowRollProtocol):
 
             start += n
 
-    def browse_series_entries(
+    def entries(
         self,
         input_data: models.BrowseSeries | list[models.BrowseSeries] | dict[str, Any],
     ) -> list[models.Datum]:
@@ -100,11 +138,11 @@ class BrowseSeriesMixin(RainbowRollProtocol):
         if isinstance(input_data, list):
             result: list[models.Datum] = []
             for response in input_data:
-                result.extend(self.browse_series_entries(response))
+                result.extend(self.entries(response))
             return result
 
         # Support for when the raw data for a BrowseSeries is passed in as the input.
         if isinstance(input_data, dict):
-            input_data = self.parse_browse_series(input_data)
+            input_data = self.parse(input_data)
 
         return input_data.data

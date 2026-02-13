@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌈 Rainbow Roll
+# Rainbow Roll
 
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https://raw.githubusercontent.com/ryn-cx/rainbow-roll/refs/heads/master/pyproject.toml)
 ![GitHub License](https://img.shields.io/github/license/ryn-cx/rainbow-roll)
@@ -10,50 +10,64 @@
 
 </div>
 
-## ✨ Features
+## Features
 
-- 🔐 **Anonymous or Authenticated**: Support for both anonymous and authenticated access
-- 🛡️ **Type Safety**: Full Pydantic models for every endpoint
-- 🔄 **Dynamically Updating Models**: Models are dynamically updated based on the response from the API
+- **Anonymous or Authenticated** - Support for both anonymous and authenticated access
+- **Type Safety** - Full Pydantic models for every endpoint with robust data validation
+- **Self-Updating Models** - Models are automatically updated when the API response structure changes
 
-## 📦 Installation
+## Installation
 
-### Requirements
-
-- 🐍 Python 3.13 or higher
-
-### Install from source
+Requires Python 3.13+
 
 ```bash
 uv add git+https://github.com/ryn-cx/rainbow-roll
 ```
 
-## 🚀 Quick Start
-
-### Create Client
+## Quick Start
 
 ```python
 from rainbow_roll import RainbowRoll
 
-# 🌐 Create anonymous client
-anonymous_client = RainbowRoll()
+# Anonymous client
+client = RainbowRoll()
 
-# 🔐 Create authenticated client
-authenticated_client = RainbowRoll(username="your_username", password="your_password")
+# Authenticated client
+client = RainbowRoll(username="your_username", password="your_password")
 ```
 
-### Access API
+### Browse Series
 
 ```python
-# 🆕 Get new releases
-new_videos = client.get_browse_series()
+browse = client.browse_series.get()
+```
 
-# 📺 Get series information
-series = client.get_series("SERIES_ID")
+### Series
 
-# 📋 Get seasons for a series
-seasons = client.get_seasons("SERIES_ID")
+```python
+series = client.series.get("SERIES_ID")
+```
 
-# 🎬 Get episodes for a season
-episodes = client.get_episodes("SEASON_ID")
+### Seasons
+
+```python
+seasons = client.seasons.get("SERIES_ID")
+```
+
+### Episodes
+
+```python
+episodes = client.episodes.get("SEASON_ID")
+```
+
+## Two-Step API
+
+Every endpoint supports a two-step `download()` / `parse()` workflow for cases where you want to inspect or cache the raw JSON before parsing:
+
+```python
+raw = client.browse_series.download()
+parsed = client.browse_series.parse(raw)
+
+raw = client.series.download("SERIES_ID")
+parsed = client.series.parse(raw)
 ```

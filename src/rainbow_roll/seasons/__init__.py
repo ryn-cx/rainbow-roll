@@ -1,36 +1,59 @@
-# The page https://www.crunchyroll.com/series/GG5H5XQ0D/dan-da-dan uses
-# https://www.crunchyroll.com/content/v2/cms/series/GG5H5XQ0D/seasons?force_locale=&locale=en-US
-from typing import Any
+"""Seasons API endpoint."""
 
-from rainbow_roll.protocol import RainbowRollProtocol
+from __future__ import annotations
+
+from functools import cached_property
+from typing import Any, override
+
+from rainbow_roll.base_api_endpoint import BaseEndpoint
 from rainbow_roll.seasons import models
 
 
-class SeasonsMixin(RainbowRollProtocol):
-    def download_seasons(
+class Seasons(BaseEndpoint[models.Seasons]):
+    """Provides methods to download, parse, and retrieve seasons data."""
+
+    @cached_property
+    @override
+    def _response_model(self) -> type[models.Seasons]:
+        return models.Seasons
+
+    def download(
         self,
         series_id: str,
         *,
         locale: str = "en-US",
     ) -> dict[str, Any]:
+        """Downloads seasons data for a given series ID.
+
+        Args:
+            series_id: The ID of the series to get seasons for.
+            locale: The locale for the request.
+
+        Returns:
+            The raw JSON response as a dict, suitable for passing to ``parse()``.
+        """
         # This referer is valid, but it's not the ideal one because the real one would
         # include the series slug at the end as well.
         headers = {"referer": f"https://www.crunchyroll.com/series/{series_id}"}
         endpoint = f"content/v2/cms/series/{series_id}/seasons"
         params: dict[str, str | None] = {"locale": locale, "force_locale": None}
-        return self._get_api_request(endpoint=endpoint, params=params, headers=headers)
+        return self._client.download(
+            endpoint=endpoint,
+            params=params,
+            headers=headers,
+        )
 
-    def parse_seasons(
-        self,
-        data: dict[str, Any],
-        *,
-        update: bool = True,
-    ) -> models.Seasons:
-        if update:
-            return self.parse_response(models.Seasons, data, "seasons")
+    def get(self, series_id: str, *, locale: str = "en-US") -> models.Seasons:
+        """Downloads and parses seasons data for a given series ID.
 
-        return models.Seasons.model_validate(data)
+        Convenience method that calls ``download()`` then ``parse()``.
 
-    def get_seasons(self, series_id: str, *, locale: str = "en-US") -> models.Seasons:
-        data = self.download_seasons(series_id, locale=locale)
-        return self.parse_seasons(data)
+        Args:
+            series_id: The ID of the series to get seasons for.
+            locale: The locale for the request.
+
+        Returns:
+            A Seasons model containing the parsed data.
+        """
+        data = self.download(series_id, locale=locale)
+        return self.parse(data)

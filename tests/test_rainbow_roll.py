@@ -1,81 +1,74 @@
-import json
-from collections.abc import Iterator
-from datetime import timedelta
-from pathlib import Path
+"""Tests for the rainbow_roll library."""
 
-import pytest
+import json
+from datetime import timedelta
 
 from rainbow_roll import RainbowRoll
-from rainbow_roll.constants import FILES_PATH
 
 client = RainbowRoll()
 
 
 class TestParsing:
-    def get_test_files(self, endpoint: str) -> Iterator[Path]:
-        """Get all JSON test files for a given endpoint."""
-        dir_path = FILES_PATH / endpoint
-        if not dir_path.exists():
-            pytest.fail(f"{dir_path} not found")
+    """Tests for parsing saved JSON files into Pydantic models."""
 
-        files = dir_path.glob("*.json")
-
-        # Make sure at least 1 file is found
-        if not any(files):
-            pytest.fail(f"No test files found in {dir_path}")
-
-        return files
-
-    def test_browse_series_parsing(self) -> None:
-        """Test that browse JSON files can be parsed without errors."""
-        for json_file in self.get_test_files("browse_series"):
+    def test_parse_browse_series(self) -> None:
+        """Parse all saved browse series JSON files."""
+        for json_file in client.browse_series.json_files_folder.glob("*.json"):
             file_content = json.loads(json_file.read_text())
-            parsed = client.parse_browse_series(file_content)
-            assert file_content == client.dump_response(parsed)
+            client.browse_series.parse(file_content)
 
-    def test_series_parsing(self) -> None:
-        for json_file in self.get_test_files("series"):
+    def test_parse_series(self) -> None:
+        """Parse all saved series JSON files."""
+        for json_file in client.series.json_files_folder.glob("*.json"):
             file_content = json.loads(json_file.read_text())
-            parsed = client.parse_series(file_content)
-            assert file_content == client.dump_response(parsed)
+            client.series.parse(file_content)
 
-    def test_seasons_parsing(self) -> None:
-        for json_file in self.get_test_files("seasons"):
+    def test_parse_seasons(self) -> None:
+        """Parse all saved seasons JSON files."""
+        for json_file in client.seasons.json_files_folder.glob("*.json"):
             file_content = json.loads(json_file.read_text())
-            parsed = client.parse_seasons(file_content)
-            assert file_content == client.dump_response(parsed)
+            client.seasons.parse(file_content)
 
-    def test_episodes_parsing(self) -> None:
-        for json_file in self.get_test_files("episodes"):
+    def test_parse_episodes(self) -> None:
+        """Parse all saved episodes JSON files."""
+        for json_file in client.episodes.json_files_folder.glob("*.json"):
             file_content = json.loads(json_file.read_text())
-            parsed = client.parse_episodes(file_content)
-            assert file_content == client.dump_response(parsed)
+            client.episodes.parse(file_content)
 
 
 class TestGet:
+    """Tests for downloading and parsing live data from Crunchyroll."""
+
     def test_get_browse_series(self) -> None:
-        client.get_browse_series()
+        """Download and parse browse series."""
+        client.browse_series.get()
 
     def test_get_series(self) -> None:
-        client.get_series("GG5H5XQ0D")
+        """Download and parse a series."""
+        client.series.get("GG5H5XQ0D")
 
     def test_get_seasons(self) -> None:
-        client.get_seasons("GG5H5XQ0D")
+        """Download and parse seasons."""
+        client.seasons.get("GG5H5XQ0D")
 
     def test_get_episodes(self) -> None:
-        client.get_episodes("G619CPMQ1")
+        """Download and parse episodes."""
+        client.episodes.get("G619CPMQ1")
 
 
 class TestCustomGet:
+    """Tests for custom endpoint methods."""
+
     def test_get_browse_series_since_datetime(self) -> None:
+        """Download and parse browse series since a datetime."""
         # Get the last entry on the first page to get the date to use for the end_date
-        # for get_browse_series_since_datetime
-        first_page = client.get_browse_series()
+        # for get_since_datetime
+        first_page = client.browse_series.get()
         last_date_on_first_page = first_page.data[-1].last_public
 
-        response = client.get_browse_series_since_datetime(
+        response = client.browse_series.get_since_datetime(
             end_datetime=last_date_on_first_page - timedelta(days=1),
         )
 
         # Each page of results has 36 entries so there should be at least 36 entries.
-        assert len(client.browse_series_entries(response)) >= 36  # noqa: PLR2004
+        assert len(client.browse_series.entries(response)) >= 36  # noqa: PLR2004

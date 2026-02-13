@@ -1,8 +1,11 @@
-from rainbow_roll import RainbowRoll
+import logging
+
+from rainbow_roll import response_models
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    client = RainbowRoll()
-    client.rebuild_models("browse_series")
-    client.rebuild_models("episodes")
-    client.rebuild_models("seasons")
-    client.rebuild_models("series")
+    for response_model in response_models():
+        logger.info("Rebuilding models: %s", response_model.__class__.__name__)
+        response_model.rebuild_models()
